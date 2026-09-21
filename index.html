@@ -17,7 +17,7 @@ main{max-width:920px;margin:auto;padding:14px}
 .preview-box{position:sticky;top:64px}
 .section-title{font-size:15px;font-weight:800;margin:0 0 10px;color:var(--ink)}
 canvas{width:100%;height:auto;display:block;border-radius:7px;background:var(--paper)}
-label{display:block;font-weight:700;font-size:13px;margin:12px 0 5px}
+label{display:block;font-weight:800;font-size:14px;margin:13px 0 6px}
 input,textarea{width:100%;padding:11px;border:1px solid #d5d0ca;border-radius:9px;font-size:16px;background:#fff;color:#333}
 input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 textarea{min-height:120px;resize:vertical;line-height:1.55}
@@ -29,11 +29,11 @@ input::placeholder,textarea::placeholder{color:#aaa}
 .custom-wrap{display:flex;align-items:center;gap:9px;margin-top:8px;font-size:13px}
 .custom-wrap input{width:48px;height:38px;padding:2px;border-radius:8px}
 .custom-wrap span{color:#766e68}
-.hint{margin:6px 0 0;font-size:12px;color:#766e68;line-height:1.5}
+.hint{margin:6px 0 0;font-size:12px;color:#5f5a56;line-height:1.55}
 .actions{display:flex;gap:8px;margin-top:14px}
 button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer}
 .p{background:var(--ink);color:#fff}.s{background:var(--soft);color:var(--ink)}
-.help{margin:9px 0 0;font-size:12px;color:#766e68;line-height:1.55}
+.help{margin:9px 0 0;font-size:12px;color:#5f5a56;line-height:1.55}
 @media(max-width:700px){
   body{background:#f5f5f5}
   main{padding:10px}
@@ -104,25 +104,25 @@ const c=document.getElementById('c'),x=c.getContext('2d');
 let img=null;
 const $=id=>document.getElementById(id);
 const palettes=[
- {name:'ミント×チョコ',accent:'#a9c9bb'},
- {name:'ピンク×ボルドー',accent:'#e7b9c5'},
- {name:'ブルー×ネイビー',accent:'#a9c9df'},
- {name:'グリーン×深緑',accent:'#b8cfad'},
- {name:'ラベンダー×紫',accent:'#c8b9d9'},
- {name:'オレンジ×ブラウン',accent:'#e8bd91'},
- {name:'モノトーン',accent:'#c7c7c7'}
+ {name:'ミント×チョコ',accent:'#a9c9bb',ink:'#4c332b',soft:'#e2eee9',paper:'#faf8f2'},
+ {name:'ピンク×ボルドー',accent:'#e7b9c5',ink:'#6b303d',soft:'#f7e4e8',paper:'#fff9fa'},
+ {name:'ブルー×ネイビー',accent:'#a9c9df',ink:'#243d55',soft:'#e4eff6',paper:'#f8fbfd'},
+ {name:'グリーン×深緑',accent:'#b8cfad',ink:'#31523a',soft:'#e6efe2',paper:'#fafcf8'},
+ {name:'ラベンダー×紫',accent:'#c8b9d9',ink:'#4d3d62',soft:'#eee8f3',paper:'#fbf9fd'},
+ {name:'オレンジ×ブラウン',accent:'#e8bd91',ink:'#67422b',soft:'#f7eadc',paper:'#fffaf5'},
+ {name:'モノトーン',accent:'#c7c7c7',ink:'#333333',soft:'#eeeeee',paper:'#fafafa'}
 ];
 function hexToRgb(h){h=h.replace('#','');return{r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)}}
 function mix(a,b,t){let A=hexToRgb(a),B=hexToRgb(b);return '#'+[A.r,A.g,A.b].map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
 function luminance(h){let{r,g,b}=hexToRgb(h);[r,g,b]=[r,g,b].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*r+.7152*g+.0722*b}
-function makeTheme(accent){let dark=luminance(accent)>0.48?mix(accent,'#2f211b',.62):mix(accent,'#111111',.42);return{accent,ink:dark,soft:mix(accent,'#ffffff',.78),paper:mix(accent,'#ffffff',.94)}}
+function makeTheme(accent){let dark=luminance(accent)>0.48?mix(accent,'#2f211b',.62):mix(accent,'#111111',.42);return{accent,ink:dark,soft:mix(accent,'#ffffff',.80),paper:mix(accent,'#ffffff',.95)}}
 function setTheme(theme){document.documentElement.style.setProperty('--accent',theme.accent);document.documentElement.style.setProperty('--ink',theme.ink);document.documentElement.style.setProperty('--soft',theme.soft);document.documentElement.style.setProperty('--paper',theme.paper);draw()}
 function selectTheme(theme,el){document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');setTheme(theme)}
-palettes.forEach((p,i)=>{let b=document.createElement('button');b.type='button';b.className='swatch'+(i===0?' active':'');b.title=p.name;b.setAttribute('aria-label',p.name);b.style.background=p.accent;b.onclick=()=>selectTheme(makeTheme(p.accent),b);$('palette').appendChild(b)});
+palettes.forEach((p,i)=>{let b=document.createElement('button');b.type='button';b.className='swatch'+(i===0?' active':'');b.title=p.name;b.setAttribute('aria-label',p.name);b.style.background=p.accent;b.onclick=()=>selectTheme(p,b);$('palette').appendChild(b)});
 $('customColor').oninput=e=>{document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));setTheme(makeTheme(e.target.value))};
 function wrap(t,w,f){x.font=f;let a=[];for(let p of String(t||'').split('\n')){let l='';for(let ch of p){if(x.measureText(l+ch).width>w&&l){a.push(l);l=ch}else l+=ch}a.push(l)}return a}
 function rr(a,b,w,h,r,col){x.fillStyle=col;x.beginPath();x.roundRect(a,b,w,h,r);x.fill()}
-function fieldValue(id,label){const v=$(id).value.trim();return v||label}
+function fieldValue(id,label){const v=$(id).value.trim();return {text:v||label,empty:!v}}
 function draw(){
  const cs=getComputedStyle(document.documentElement),accent=cs.getPropertyValue('--accent').trim(),ink=cs.getPropertyValue('--ink').trim(),soft=cs.getPropertyValue('--soft').trim(),paper=cs.getPropertyValue('--paper').trim();
  x.textAlign='left';x.fillStyle=paper;x.fillRect(0,0,1240,1754);x.fillStyle=accent;x.fillRect(0,0,1240,180);
@@ -132,11 +132,11 @@ function draw(){
  if(img){let s=Math.max(700/img.width,1325/img.height),w=img.width*s,h=img.height*s;x.save();x.beginPath();x.rect(0,180,700,1325);x.clip();x.drawImage(img,(700-w)/2,180+(1325-h)/2,w,h);x.restore()}
  else{x.fillStyle=mix(accent,'#333333',.25);x.font='28px sans-serif';x.textAlign='center';x.fillText('本の写真を選択してください',350,840);x.textAlign='left'}
  const title=fieldValue('title','書籍名'),author=fieldValue('author','著者名'),pub=fieldValue('pub','出版社名'),year=fieldValue('year','出版年'),tag=fieldValue('tag','ひとこと'),blurb=fieldValue('blurb','紹介文');
- x.fillStyle=ink;x.font='700 62px sans-serif';wrap(title,430,x.font).slice(0,3).forEach((l,i)=>x.fillText(l,760,250+i*78));
+ x.fillStyle=title.empty?mix(ink,'#ffffff',.38):ink;x.font='700 58px sans-serif';wrap(title.text,430,x.font).slice(0,3).forEach((l,i)=>x.fillText(l,760,250+i*76));
  x.fillStyle=accent;x.fillRect(760,500,400,5);
- [['著　者',author],['出版社',pub],['出版年',year]].forEach((m,i)=>{let y=555+i*72;rr(760,y,125,43,8,soft);x.fillStyle=ink;x.font='18px sans-serif';x.textAlign='center';x.fillText(m[0],822,y+29);x.textAlign='left';x.font='25px sans-serif';x.fillText(m[1],910,y+29)});
- rr(760,790,400,135,18,soft);x.fillStyle=ink;x.font='700 27px sans-serif';wrap(tag,340,x.font).slice(0,3).forEach((l,i)=>x.fillText(l,790,825+i*38));
- x.fillStyle=ink;x.font='22px sans-serif';wrap(blurb,400,x.font).slice(0,13).forEach((l,i)=>x.fillText(l,760,975+i*34));
+ [['著　者',author],['出版社',pub],['出版年',year]].forEach((m,i)=>{let y=555+i*72;rr(760,y,125,43,8,soft);x.fillStyle=ink;x.font='18px sans-serif';x.textAlign='center';x.fillText(m[0],822,y+29);x.textAlign='left';x.font='23px sans-serif';x.fillStyle=m[1].empty?mix(ink,'#ffffff',.35):ink;x.fillText(m[1].text,910,y+29)});
+ rr(760,790,400,135,18,soft);x.fillStyle=tag.empty?mix(ink,'#ffffff',.35):ink;x.font='700 26px sans-serif';wrap(tag.text,340,x.font).slice(0,3).forEach((l,i)=>x.fillText(l,790,825+i*38));
+ x.fillStyle=blurb.empty?mix(ink,'#ffffff',.35):ink;x.font='22px sans-serif';wrap(blurb.text,400,x.font).slice(0,13).forEach((l,i)=>x.fillText(l,760,975+i*34));
  x.fillStyle=accent;x.fillRect(760,1435,400,4);x.font='24px sans-serif';x.textAlign='center';x.fillText('きっと、どこかでまた、',960,1490);x.fillText('いいことがある。',960,1530);
  x.fillStyle=ink;x.font='15px Georgia';x.textAlign='left';x.fillText('GOOD BOOKS, A KINDER TOMORROW.',55,1695);
 }
@@ -144,7 +144,7 @@ function draw(){
 $('photo').onchange=e=>{let f=e.target.files[0];if(!f)return;let i=new Image();i.onload=()=>{img=i;draw()};i.src=URL.createObjectURL(f)};
 $('save').onclick=()=>{let a=document.createElement('a');a.download='book_introduction.png';a.href=c.toDataURL('image/png');a.click()};
 $('share').onclick=()=>c.toBlob(async b=>{let f=new File([b],'book_introduction.png',{type:'image/png'});if(navigator.share&&navigator.canShare?.({files:[f]})){try{await navigator.share({title:'本の紹介カード',files:[f]})}catch(e){}}else alert('この端末では直接共有できません。「画像として保存」を使ってください。')},'image/png');
-setTheme(makeTheme('#a9c9bb'));
+setTheme(palettes[0]);
 </script>
 </body>
 </html>
