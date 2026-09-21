@@ -119,6 +119,18 @@ function pill(text,x0,y0,w0,ink,soft){rr(x0,y0,w0,46,22,soft);x.fillStyle=ink;x.
 function value(id,placeholder){let v=$(id).value.trim();return{text:v||placeholder,empty:!v}}
 function drawPlaceholder(px,py,pw,ph,label){x.save();x.setLineDash([10,8]);x.strokeStyle='#c9c2bb';x.lineWidth=3;x.strokeRect(px+12,py+12,pw-24,ph-24);x.setLineDash([]);x.strokeStyle='#aab0ad';x.lineWidth=7;x.strokeRect(px+pw/2-42,py+ph/2-62,84,62);x.beginPath();x.arc(px+pw/2-14,py+ph/2-42,7,0,Math.PI*2);x.fillStyle='#aab0ad';x.fill();x.beginPath();x.moveTo(px+pw/2-34,py+ph/2-10);x.lineTo(px+pw/2-5,py+ph/2-38);x.lineTo(px+pw/2+12,py+ph/2-20);x.lineTo(px+pw/2+32,py+ph/2-8);x.stroke();x.fillStyle='#7e8885';x.font='700 24px sans-serif';x.textAlign='center';x.fillText('IMAGE',px+pw/2,py+ph/2+52);x.font='18px sans-serif';x.fillText(label,px+pw/2,py+ph/2+84);x.textAlign='left';x.restore()}
 function drawImageCover(img,px,py,pw,ph){let s=Math.max(pw/img.width,ph/img.height),w=img.width*s,h=img.height*s;x.save();x.beginPath();x.rect(px,py,pw,ph);x.clip();x.drawImage(img,px+(pw-w)/2,py+(ph-h)/2,w,h);x.restore()}
+function fieldBox(label, valueText, x0, y0, w0, h0, ink, soft, opts={}){
+  const {size=22, weight=500, placeholder=false, lines=2}=opts;
+  const labelW=Math.max(120, Math.min(w0-10, 30 + label.length*21));
+  pill(label,x0,y0,labelW,ink,soft);
+  const boxY=y0+58;
+  rr(x0,boxY,w0,h0,12,'#fff');
+  x.strokeStyle='#d5d0ca';x.lineWidth=2;x.stroke();
+  x.fillStyle=placeholder?mix(ink,'#fff',.42):ink;
+  x.font=`${weight} ${size}px sans-serif`;
+  wrap(valueText,w0-34,x.font).slice(0,lines).forEach((l,i)=>x.fillText(l,x0+17,boxY+size+10+i*(size+9)));
+  return boxY+h0;
+}
 function draw(){
  const cs=getComputedStyle(document.documentElement),accent=cs.getPropertyValue('--accent').trim(),ink=cs.getPropertyValue('--ink').trim(),soft=cs.getPropertyValue('--soft').trim(),paper=cs.getPropertyValue('--paper').trim();
  x.textAlign='left';x.fillStyle=paper;x.fillRect(0,0,1240,1754);
@@ -130,32 +142,29 @@ function draw(){
  if(headline.text){wrap(headline.text,1120,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,55,62+i*50))}
  else{x.fillStyle=mix(ink,'#fff',.35);x.font='700 27px sans-serif';x.fillText('全体タイトル／キャッチコピー（記入しなくても可）',55,62)}
  x.fillStyle=ink;x.font='700 30px sans-serif';x.fillText(introducer.empty?'紹介者名（無記名でも可）':introducer.text,55,158);
- // Main photo + status area
+ // Main photo + right-side information
  const photoY=250,photoH=610,photoX=55,photoW=650;
  if(img1&&img2){drawImageCover(img1,photoX,photoY,320,photoH);drawImageCover(img2,photoX+330,photoY,320,photoH);x.fillStyle=paper;x.fillRect(photoX+320,photoY,10,photoH)}
  else if(img1){drawImageCover(img1,photoX,photoY,photoW,photoH)}
  else if(img2){drawImageCover(img2,photoX,photoY,photoW,photoH)}
  else{drawPlaceholder(photoX,photoY,photoW,photoH,'ここに本の写真を入れてください')}
  const rx=750,rw=435;
- pill('ステータス',rx,250,150,ink,soft);rr(rx,310,rw,58,10,'#fff');x.strokeStyle='#d5d0ca';x.lineWidth=2;x.stroke();x.fillStyle=ink;x.font='22px sans-serif';x.fillText(status,rx+18,346);
- let rightY=400;
- if(showCondition){pill('本の状態',rx,rightY,150,ink,soft);rr(rx,rightY+60,rw,58,10,'#fff');x.strokeStyle='#d5d0ca';x.stroke();x.fillStyle=ink;x.font='22px sans-serif';x.fillText(condition,rx+18,rightY+96);rightY+=145}
- // Book title
- pill('書籍名',rx,rightY,130,ink,soft);x.fillStyle=title.empty?mix(ink,'#fff',.35):ink;x.font='700 40px sans-serif';wrap(title.text,rw,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,rx,rightY+78+i*50));
- rightY += 185;
- // Author / publisher
- const colGap=18, colW=(rw-colGap)/2;
- pill('著者名',rx,rightY,130,ink,soft);x.fillStyle=author.empty?mix(ink,'#fff',.35):ink;x.font='21px sans-serif';wrap(author.text,colW,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,rx,rightY+78+i*31));
- pill('出版社',rx+colW+colGap,rightY,130,ink,soft);x.fillStyle=pub.empty?mix(ink,'#fff',.35):ink;wrap(pub.text,colW,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,rx+colW+colGap,rightY+78+i*31));
- rightY += 120;
- // Year / keywords
- pill('出版年',rx,rightY,130,ink,soft);x.fillStyle=year.empty?mix(ink,'#fff',.35):ink;wrap(year.text,colW,x.font).slice(0,1).forEach(l=>x.fillText(l,rx,rightY+78));
- pill('キーワード／ジャンルなど',rx+colW+colGap,rightY,250,ink,soft);x.fillStyle=keywords.empty?mix(ink,'#fff',.35):ink;wrap(keywords.text,colW,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,rx+colW+colGap,rightY+78+i*31));
- // Introduction spans full width and uses the lower area
+ let rightY=250;
+ rightY=fieldBox('ステータス',status,rx,rightY,435,58,ink,soft,{size:20,weight:500,lines:1});
+ if(showCondition){rightY+=24;rightY=fieldBox('本の状態',condition,rx,rightY,435,58,ink,soft,{size:20,weight:500,lines:1});}
+ rightY+=26;
+ rightY=fieldBox('書籍名',title.text,rx,rightY,435,92,ink,soft,{size:30,weight:700,placeholder:title.empty,lines:2});
+ rightY+=24;
+ const colGap=18,colW=(rw-colGap)/2;
+ const y1=rightY;
+ fieldBox('著者名',author.text,rx,y1,colW,66,ink,soft,{size:20,weight:500,placeholder:author.empty,lines:1});
+ fieldBox('出版社',pub.text,rx+colW+colGap,y1,colW,66,ink,soft,{size:20,weight:500,placeholder:pub.empty,lines:1});
+ rightY=y1+66+58+24;
+ fieldBox('出版年',year.text,rx,rightY,colW,66,ink,soft,{size:20,weight:500,placeholder:year.empty,lines:1});
+ fieldBox('キーワード／ジャンルなど',keywords.text,rx+colW+colGap,rightY,colW,66,ink,soft,{size:18,weight:500,placeholder:keywords.empty,lines:2});
+ // Introduction spans the lower area
  const blurbTop=1035;
- pill('紹介文',55,blurbTop,140,ink,soft);
- x.fillStyle='#fff';x.strokeStyle='#d5d0ca';x.lineWidth=2;x.beginPath();x.roundRect(55,blurbTop+60,1130,510,14);x.fill();x.stroke();
- x.fillStyle=blurb.empty?mix(ink,'#fff',.35):ink;x.font='22px sans-serif';wrap(blurb.text,1080,x.font).slice(0,18).forEach((l,i)=>x.fillText(l,80,blurbTop+105+i*39));
+ fieldBox('紹介文',blurb.text,55,blurbTop,1130,510,ink,soft,{size:22,weight:500,placeholder:blurb.empty,lines:18});
 }
 ['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).oninput=draw);
 $('status').onchange=()=>{$('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');draw()};
