@@ -11,17 +11,20 @@
 body{margin:0;background:#f1f1f1;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Yu Gothic",sans-serif;color:#4c332b}
 header{background:var(--accent);padding:12px 16px;position:sticky;top:0;z-index:5;color:var(--ink);box-shadow:0 1px 5px #0001}
 header b{font-size:17px}
-main{max-width:920px;margin:auto;padding:14px}
-.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,1fr);gap:16px;align-items:start}
+main{max-width:980px;margin:auto;padding:14px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,1fr);gap:16px;align-items:start}
 .box{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px #0001}
 .preview-box{position:sticky;top:64px}
 .section-title{font-size:15px;font-weight:800;margin:0 0 10px;color:var(--ink)}
-canvas{width:100%;height:auto;display:block;border-radius:7px;background:var(--paper)}
 label{display:block;font-weight:800;font-size:14px;margin:13px 0 6px}
-input,textarea{width:100%;padding:11px;border:1px solid #d5d0ca;border-radius:9px;font-size:16px;background:#fff;color:#333}
-input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
-textarea{min-height:120px;resize:vertical;line-height:1.55}
+input,textarea,select{width:100%;padding:11px;border:1px solid #d5d0ca;border-radius:9px;font-size:16px;background:#fff;color:#333}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+textarea{min-height:250px;resize:vertical;line-height:1.6}
+select{appearance:auto}
 input::placeholder,textarea::placeholder{color:#aaa}
+.file-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.file-card{border:1px dashed #c9c2bb;border-radius:10px;padding:10px;background:#fcfbf7}
+.file-card label{margin:0 0 6px;font-size:13px}
 .file-note{font-size:12px;color:#766e68;margin:5px 0 0;line-height:1.5}
 .palette{display:flex;flex-wrap:wrap;gap:10px;margin:7px 0 5px}
 .swatch{width:36px;height:36px;border-radius:50%;border:2px solid white;box-shadow:0 0 0 1px #ccc;cursor:pointer;padding:0;margin:0}
@@ -35,16 +38,8 @@ button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:8
 .p{background:var(--ink);color:#fff}.s{background:var(--soft);color:var(--ink)}
 .help{margin:9px 0 0;font-size:12px;color:#5f5a56;line-height:1.55}
 @media(max-width:700px){
-  body{background:#f5f5f5}
-  main{padding:10px}
-  .grid{display:flex;flex-direction:column;gap:12px}
-  .form-box{order:1}
-  .preview-box{order:2;position:static}
-  .box{padding:12px;border-radius:12px}
-  header{padding:11px 14px}
-  header b{font-size:16px}
-  .actions{position:sticky;bottom:8px;z-index:4;background:#fff;padding:8px;border-radius:12px;box-shadow:0 2px 12px #0002;margin-left:-4px;margin-right:-4px}
-  button.action{font-size:14px}
+ body{background:#f5f5f5}main{padding:10px}.grid{display:flex;flex-direction:column;gap:12px}.form-box{order:1}.preview-box{order:2;position:static}.box{padding:12px;border-radius:12px}
+ header{padding:11px 14px}header b{font-size:16px}.actions{position:sticky;bottom:8px;z-index:4;background:#fff;padding:8px;border-radius:12px;box-shadow:0 2px 12px #0002;margin-left:-4px;margin-right:-4px}button.action{font-size:14px}
 }
 </style>
 </head>
@@ -52,66 +47,63 @@ button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:8
 <header><b>📚 本の紹介カード</b></header>
 <main>
 <div class="grid">
-  <section class="box form-box">
-    <p class="section-title">① 本の情報を入力</p>
+<section class="box form-box">
+<p class="section-title">① 本の情報を入力</p>
+<label>カードの色</label>
+<div class="palette" id="palette"></div>
+<div class="custom-wrap"><input id="customColor" type="color" value="#a9c9bb" aria-label="好きな色"><span>好きな色を自由に選ぶこともできます</span></div>
+<p class="hint">選んだ色に合わせて、背景・見出し・アクセント色をまとめて調整します。</p>
 
-    <label>カードの色</label>
-    <div class="palette" id="palette" aria-label="カードの色を選択"></div>
-    <div class="custom-wrap">
-      <input id="customColor" type="color" value="#a9c9bb" aria-label="好きな色">
-      <span>好きな色を自由に選ぶこともできます</span>
-    </div>
-    <p class="hint">選んだ色に合わせて、背景・見出し・アクセント色を自動調整します。</p>
+<label>本の写真（入れなくてもOK・2枚まで）</label>
+<div class="file-grid">
+  <div class="file-card"><label for="photo1">写真1</label><input id="photo1" type="file" accept="image/*"><p class="file-note">表紙など</p></div>
+  <div class="file-card"><label for="photo2">写真2</label><input id="photo2" type="file" accept="image/*"><p class="file-note">中面・帯など</p></div>
+</div>
 
-    <label for="photo">本の写真</label>
-    <input id="photo" type="file" accept="image/*">
-    <p class="file-note">スマートフォンの写真フォルダから選べます。</p>
+<label for="headline">全体タイトル／キャッチコピー（記入しなくても可）</label>
+<input id="headline" placeholder="例：心が少し、やさしくなる一冊">
+<label for="introducer">紹介者名（無記名でも可）</label>
+<input id="introducer" placeholder="例：山田花子">
+<label for="title">書籍名</label>
+<input id="title" placeholder="例：また、どこかで会えたら">
+<label for="author">著者名</label>
+<input id="author" placeholder="例：寺地はるな">
+<label for="pub">出版社名</label>
+<input id="pub" placeholder="例：中央公論新社">
+<label for="year">出版年</label>
+<input id="year" placeholder="例：2023年">
+<label for="keywords">キーワード／ジャンルなど</label>
+<input id="keywords" placeholder="例：小説、青春、趣味、仕事、北京 など">
+<label for="status">ステータス</label>
+<select id="status">
+<option value="紹介のみ">紹介のみ</option><option value="お譲り可能">お譲り可能</option><option value="レンタル可能">レンタル可能</option><option value="お譲り・レンタル可能">お譲り・レンタル可能</option>
+</select>
+<div id="conditionWrap" hidden><label for="condition">本の状態</label><select id="condition"><option value="非常に良い">非常に良い</option><option value="良い">良い</option><option value="可">可</option></select></div>
+<label for="blurb">紹介文</label>
+<textarea id="blurb" placeholder="この本のおすすめポイントや、どんな方に読んでほしいかなどを自由に書いてください。"></textarea>
+<div class="actions"><button class="action s" id="share">📤 共有する</button><button class="action p" id="save">📥 画像として保存</button></div>
+<p class="help">完成したカードはPNG画像として保存できます。スマートフォンでは、保存した画像をWeChat・LINEなどで送れます。</p>
+</section>
 
-    <label for="title">書籍名</label>
-    <input id="title" placeholder="例：また、どこかで会えたら">
-
-    <label for="author">著者名</label>
-    <input id="author" placeholder="例：寺地はるな">
-
-    <label for="pub">出版社名</label>
-    <input id="pub" placeholder="例：中央公論新社">
-
-    <label for="year">出版年</label>
-    <input id="year" placeholder="例：2023年">
-
-    <label for="tag">ひとこと</label>
-    <input id="tag" placeholder="例：いつもの風景の中に、小さな希望が見つかる。">
-
-    <label for="blurb">紹介文</label>
-    <textarea id="blurb" placeholder="この本を読んで感じたこと、誰かにすすめたい理由などを自由に書いてください。"></textarea>
-
-    <div class="actions">
-      <button class="action p" id="save">📥 画像として保存</button>
-      <button class="action s" id="share">📤 共有する</button>
-    </div>
-    <p class="help">完成したカードはPNG画像として保存できます。スマートフォンでは、保存した画像をWeChat・LINEなどで送れます。</p>
-  </section>
-
-  <section class="box preview-box">
-    <p class="section-title">② 完成イメージ</p>
-    <canvas id="c" width="1240" height="1754"></canvas>
-    <p class="help">入力内容や色を変更すると、ここにリアルタイムで反映されます。</p>
-  </section>
+<section class="box preview-box">
+<p class="section-title">② 完成イメージ</p>
+<canvas id="c" width="1240" height="1754"></canvas>
+<p class="help">入力内容や色、写真を変更すると、ここにリアルタイムで反映されます。</p>
+</section>
 </div>
 </main>
 <script>
 const c=document.getElementById('c'),x=c.getContext('2d');
-let img=null;
+let img1=null,img2=null;
 const $=id=>document.getElementById(id);
 const palettes=[
- {name:'ミント×チョコ',accent:'#a9c9bb',ink:'#4c332b',soft:'#e2eee9',paper:'#faf8f2'},
- {name:'ピンク×ボルドー',accent:'#e7b9c5',ink:'#6b303d',soft:'#f7e4e8',paper:'#fff9fa'},
- {name:'ブルー×ネイビー',accent:'#a9c9df',ink:'#243d55',soft:'#e4eff6',paper:'#f8fbfd'},
- {name:'グリーン×深緑',accent:'#b8cfad',ink:'#31523a',soft:'#e6efe2',paper:'#fafcf8'},
- {name:'ラベンダー×紫',accent:'#c8b9d9',ink:'#4d3d62',soft:'#eee8f3',paper:'#fbf9fd'},
- {name:'オレンジ×ブラウン',accent:'#e8bd91',ink:'#67422b',soft:'#f7eadc',paper:'#fffaf5'},
- {name:'モノトーン',accent:'#c7c7c7',ink:'#333333',soft:'#eeeeee',paper:'#fafafa'}
-];
+{name:'ミント×チョコ',accent:'#a9c9bb',ink:'#4c332b',soft:'#e2eee9',paper:'#faf8f2'},
+{name:'ピンク×ボルドー',accent:'#e7b9c5',ink:'#6b303d',soft:'#f7e4e8',paper:'#fff9fa'},
+{name:'ブルー×ネイビー',accent:'#a9c9df',ink:'#243d55',soft:'#e4eff6',paper:'#f8fbfd'},
+{name:'グリーン×深緑',accent:'#b8cfad',ink:'#31523a',soft:'#e6efe2',paper:'#fafcf8'},
+{name:'ラベンダー×紫',accent:'#c8b9d9',ink:'#4d3d62',soft:'#eee8f3',paper:'#fbf9fd'},
+{name:'オレンジ×ブラウン',accent:'#e8bd91',ink:'#67422b',soft:'#f7eadc',paper:'#fffaf5'},
+{name:'モノトーン',accent:'#c7c7c7',ink:'#333333',soft:'#eeeeee',paper:'#fafafa'}];
 function hexToRgb(h){h=h.replace('#','');return{r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)}}
 function mix(a,b,t){let A=hexToRgb(a),B=hexToRgb(b);return '#'+[A.r,A.g,A.b].map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
 function luminance(h){let{r,g,b}=hexToRgb(h);[r,g,b]=[r,g,b].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*r+.7152*g+.0722*b}
@@ -122,26 +114,45 @@ palettes.forEach((p,i)=>{let b=document.createElement('button');b.type='button';
 $('customColor').oninput=e=>{document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));setTheme(makeTheme(e.target.value))};
 function wrap(t,w,f){x.font=f;let a=[];for(let p of String(t||'').split('\n')){let l='';for(let ch of p){if(x.measureText(l+ch).width>w&&l){a.push(l);l=ch}else l+=ch}a.push(l)}return a}
 function rr(a,b,w,h,r,col){x.fillStyle=col;x.beginPath();x.roundRect(a,b,w,h,r);x.fill()}
-function fieldValue(id,label){const v=$(id).value.trim();return {text:v||label,empty:!v}}
+function pill(text,x0,y0,w0,ink,soft){rr(x0,y0,w0,46,22,soft);x.fillStyle=ink;x.font='700 21px sans-serif';x.textAlign='center';x.fillText(text,x0+w0/2,y0+30);x.textAlign='left'}
+function value(id,placeholder){let v=$(id).value.trim();return{text:v||placeholder,empty:!v}}
+function drawPlaceholder(px,py,pw,ph,label){x.save();x.setLineDash([10,8]);x.strokeStyle='#c9c2bb';x.lineWidth=3;x.strokeRect(px+12,py+12,pw-24,ph-24);x.setLineDash([]);x.strokeStyle='#aab0ad';x.lineWidth=7;x.strokeRect(px+pw/2-42,py+ph/2-62,84,62);x.beginPath();x.arc(px+pw/2-14,py+ph/2-42,7,0,Math.PI*2);x.fillStyle='#aab0ad';x.fill();x.beginPath();x.moveTo(px+pw/2-34,py+ph/2-10);x.lineTo(px+pw/2-5,py+ph/2-38);x.lineTo(px+pw/2+12,py+ph/2-20);x.lineTo(px+pw/2+32,py+ph/2-8);x.stroke();x.fillStyle='#7e8885';x.font='700 24px sans-serif';x.textAlign='center';x.fillText('IMAGE',px+pw/2,py+ph/2+52);x.font='18px sans-serif';x.fillText(label,px+pw/2,py+ph/2+84);x.textAlign='left';x.restore()}
+function drawImageCover(img,px,py,pw,ph){let s=Math.max(pw/img.width,ph/img.height),w=img.width*s,h=img.height*s;x.save();x.beginPath();x.rect(px,py,pw,ph);x.clip();x.drawImage(img,px+(pw-w)/2,py+(ph-h)/2,w,h);x.restore()}
 function draw(){
  const cs=getComputedStyle(document.documentElement),accent=cs.getPropertyValue('--accent').trim(),ink=cs.getPropertyValue('--ink').trim(),soft=cs.getPropertyValue('--soft').trim(),paper=cs.getPropertyValue('--paper').trim();
- x.textAlign='left';x.fillStyle=paper;x.fillRect(0,0,1240,1754);x.fillStyle=accent;x.fillRect(0,0,1240,180);
- x.fillStyle=luminance(accent)>0.48?ink:'#fff';x.font='700 48px sans-serif';x.fillText('心が少し、',55,55);x.fillText('やさしくなる一冊',55,115);
- x.fillStyle=ink;x.font='20px Georgia';x.fillText('BOOK INTRODUCTION',855,72);
- x.fillStyle=mix(accent,'#ffffff',.72);x.fillRect(0,180,700,1325);
- if(img){let s=Math.max(700/img.width,1325/img.height),w=img.width*s,h=img.height*s;x.save();x.beginPath();x.rect(0,180,700,1325);x.clip();x.drawImage(img,(700-w)/2,180+(1325-h)/2,w,h);x.restore()}
- else{x.fillStyle=mix(accent,'#333333',.25);x.font='28px sans-serif';x.textAlign='center';x.fillText('本の写真を選択してください',350,840);x.textAlign='left'}
- const title=fieldValue('title','書籍名'),author=fieldValue('author','著者名'),pub=fieldValue('pub','出版社名'),year=fieldValue('year','出版年'),tag=fieldValue('tag','ひとこと'),blurb=fieldValue('blurb','紹介文');
- x.fillStyle=title.empty?mix(ink,'#ffffff',.38):ink;x.font='700 58px sans-serif';wrap(title.text,430,x.font).slice(0,3).forEach((l,i)=>x.fillText(l,760,250+i*76));
- x.fillStyle=accent;x.fillRect(760,500,400,5);
- [['著　者',author],['出版社',pub],['出版年',year]].forEach((m,i)=>{let y=555+i*72;rr(760,y,125,43,8,soft);x.fillStyle=ink;x.font='18px sans-serif';x.textAlign='center';x.fillText(m[0],822,y+29);x.textAlign='left';x.font='23px sans-serif';x.fillStyle=m[1].empty?mix(ink,'#ffffff',.35):ink;x.fillText(m[1].text,910,y+29)});
- rr(760,790,400,135,18,soft);x.fillStyle=tag.empty?mix(ink,'#ffffff',.35):ink;x.font='700 26px sans-serif';wrap(tag.text,340,x.font).slice(0,3).forEach((l,i)=>x.fillText(l,790,825+i*38));
- x.fillStyle=blurb.empty?mix(ink,'#ffffff',.35):ink;x.font='22px sans-serif';wrap(blurb.text,400,x.font).slice(0,13).forEach((l,i)=>x.fillText(l,760,975+i*34));
- x.fillStyle=accent;x.fillRect(760,1435,400,4);x.font='24px sans-serif';x.textAlign='center';x.fillText('きっと、どこかでまた、',960,1490);x.fillText('いいことがある。',960,1530);
- x.fillStyle=ink;x.font='15px Georgia';x.textAlign='left';x.fillText('GOOD BOOKS, A KINDER TOMORROW.',55,1695);
+ x.textAlign='left';x.fillStyle=paper;x.fillRect(0,0,1240,1754);
+ const headline=value('headline',''),introducer=value('introducer',''),title=value('title','書籍名'),author=value('author','著者名'),pub=value('pub','出版社名'),year=value('year','出版年'),keywords=value('keywords',''),blurb=value('blurb','紹介文');
+ const status=$('status').value,condition=$('condition').value,showCondition=status==='お譲り可能'||status==='お譲り・レンタル可能';
+ // Header: title and introducer stacked vertically
+ x.fillStyle=accent;x.fillRect(0,0,1240,210);
+ x.fillStyle=ink;x.font='700 44px sans-serif';
+ if(headline.text){wrap(headline.text,770,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,55,62+i*50))}else{x.fillStyle=mix(ink,'#fff',.38);x.font='700 27px sans-serif';x.fillText('全体タイトル／キャッチコピー（記入しなくても可）',55,62)}
+ x.fillStyle=ink;x.font='700 28px sans-serif';x.fillText(introducer.empty?'紹介者名（無記名でも可）':introducer.text,55,162);
+ x.fillStyle=accent;x.fillRect(0,210,1240,6);
+ // Photos: one photo = large; two photos = half and half
+ const photoY=250,photoH=520,photoX=55,photoW=650;
+ if(img1&&img2){drawImageCover(img1,photoX,photoY,320,photoH);drawImageCover(img2,photoX+330,photoY,320,photoH)}
+ else if(img1){drawImageCover(img1,photoX,photoY,650,photoH)}
+ else if(img2){drawImageCover(img2,photoX,photoY,650,photoH)}
+ else{drawPlaceholder(photoX,photoY,650,photoH,'ここに本の写真を入れてください')}
+ if(img1&&img2){x.fillStyle=paper;x.fillRect(photoX+320,photoY,10,photoH)}
+ // right info
+ const rx=750,rw=435;
+ pill('ステータス',rx,250,150,ink,soft);rr(rx,310,rw,58,10,'#fff');x.strokeStyle='#d5d0ca';x.lineWidth=2;x.stroke();x.fillStyle=ink;x.font='22px sans-serif';x.fillText(status,rx+18,346);
+ if(showCondition){pill('本の状態',rx,390,150,ink,soft);rr(rx,450,rw,58,10,'#fff');x.strokeStyle='#d5d0ca';x.stroke();x.fillStyle=ink;x.font='22px sans-serif';x.fillText(condition,rx+18,486)}
+ const infoY=showCondition?555:480;
+ pill('書籍名',rx,infoY,130,ink,soft);x.fillStyle=title.empty?mix(ink,'#fff',.35):ink;x.font='700 40px sans-serif';wrap(title.text,rw, x.font).slice(0,2).forEach((l,i)=>x.fillText(l,rx,infoY+78+i*50));
+ const metaY=infoY+185;
+ [['著者名',author],['出版社',pub],['出版年',year],['キーワード／ジャンルなど',keywords]].forEach((m,i)=>{let y=metaY+i*70;pill(m[0],rx,y,Math.min(270,40+m[0].length*24),ink,soft);x.fillStyle=m[1].empty?mix(ink,'#fff',.35):ink;x.font='21px sans-serif';let lines=wrap(m[1].text,rw, x.font);lines.slice(0,1).forEach(l=>x.fillText(l,rx,y+78))});
+ // Introduction fills lower area
+ const blurbTop=Math.max(930,metaY+4*70+100);pill('紹介文',55,blurbTop,140,ink,soft);x.fillStyle='#fff';x.strokeStyle='#d5d0ca';x.lineWidth=2;x.roundRect(55,blurbTop+60,1130,430,14);x.fill();x.stroke();x.fillStyle=blurb.empty?mix(ink,'#fff',.35):ink;x.font='22px sans-serif';wrap(blurb.text,1080,x.font).slice(0,15).forEach((l,i)=>x.fillText(l,80,blurbTop+105+i*39));
+ // no fixed footer; content intentionally uses full page
 }
-['title','author','pub','year','tag','blurb'].forEach(id=>$(id).oninput=draw);
-$('photo').onchange=e=>{let f=e.target.files[0];if(!f)return;let i=new Image();i.onload=()=>{img=i;draw()};i.src=URL.createObjectURL(f)};
+['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).oninput=draw);
+$('status').onchange=()=>{$('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');draw()};
+$('condition').onchange=draw;$('conditionWrap').hidden=true;
+function loadPhoto(inputId,setter){$(inputId).onchange=e=>{let f=e.target.files[0];if(!f)return;let i=new Image();i.onload=()=>{setter(i);draw()};i.src=URL.createObjectURL(f)}}
+loadPhoto('photo1',i=>img1=i);loadPhoto('photo2',i=>img2=i);
 $('save').onclick=()=>{let a=document.createElement('a');a.download='book_introduction.png';a.href=c.toDataURL('image/png');a.click()};
 $('share').onclick=()=>c.toBlob(async b=>{let f=new File([b],'book_introduction.png',{type:'image/png'});if(navigator.share&&navigator.canShare?.({files:[f]})){try{await navigator.share({title:'本の紹介カード',files:[f]})}catch(e){}}else alert('この端末では直接共有できません。「画像として保存」を使ってください。')},'image/png');
 setTheme(palettes[0]);
