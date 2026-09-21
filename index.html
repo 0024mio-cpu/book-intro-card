@@ -14,7 +14,8 @@ header b{font-size:17px}
 main{max-width:980px;margin:auto;padding:14px}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,1fr);gap:16px;align-items:start}
 .box{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px #0001}
-.preview-box{position:sticky;top:64px}
+.preview-box{position:sticky;top:64px;overflow:hidden}
+.preview-box canvas{display:block;width:100%;height:auto;border-radius:8px}
 .section-title{font-size:15px;font-weight:800;margin:0 0 10px;color:var(--ink)}
 label{display:block;font-weight:800;font-size:14px;margin:13px 0 6px}
 input,textarea,select{width:100%;padding:11px;border:1px solid #d5d0ca;border-radius:9px;font-size:16px;background:#fff;color:#333}
@@ -123,30 +124,38 @@ function draw(){
  x.textAlign='left';x.fillStyle=paper;x.fillRect(0,0,1240,1754);
  const headline=value('headline',''),introducer=value('introducer',''),title=value('title','書籍名'),author=value('author','著者名'),pub=value('pub','出版社名'),year=value('year','出版年'),keywords=value('keywords',''),blurb=value('blurb','紹介文');
  const status=$('status').value,condition=$('condition').value,showCondition=status==='お譲り可能'||status==='お譲り・レンタル可能';
- // Header: title and introducer stacked vertically
- x.fillStyle=accent;x.fillRect(0,0,1240,210);
- x.fillStyle=ink;x.font='700 44px sans-serif';
- if(headline.text){wrap(headline.text,770,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,55,62+i*50))}else{x.fillStyle=mix(ink,'#fff',.38);x.font='700 27px sans-serif';x.fillText('全体タイトル／キャッチコピー（記入しなくても可）',55,62)}
- x.fillStyle=ink;x.font='700 28px sans-serif';x.fillText(introducer.empty?'紹介者名（無記名でも可）':introducer.text,55,162);
- x.fillStyle=accent;x.fillRect(0,210,1240,6);
- // Photos: one photo = large; two photos = half and half
- const photoY=250,photoH=520,photoX=55,photoW=650;
- if(img1&&img2){drawImageCover(img1,photoX,photoY,320,photoH);drawImageCover(img2,photoX+330,photoY,320,photoH)}
- else if(img1){drawImageCover(img1,photoX,photoY,650,photoH)}
- else if(img2){drawImageCover(img2,photoX,photoY,650,photoH)}
- else{drawPlaceholder(photoX,photoY,650,photoH,'ここに本の写真を入れてください')}
- if(img1&&img2){x.fillStyle=paper;x.fillRect(photoX+320,photoY,10,photoH)}
- // right info
+ // Header
+ x.fillStyle=accent;x.fillRect(0,0,1240,205);
+ x.fillStyle=ink;x.font='700 42px sans-serif';
+ if(headline.text){wrap(headline.text,1120,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,55,62+i*50))}
+ else{x.fillStyle=mix(ink,'#fff',.35);x.font='700 27px sans-serif';x.fillText('全体タイトル／キャッチコピー（記入しなくても可）',55,62)}
+ x.fillStyle=ink;x.font='700 30px sans-serif';x.fillText(introducer.empty?'紹介者名（無記名でも可）':introducer.text,55,158);
+ // Main photo + status area
+ const photoY=250,photoH=610,photoX=55,photoW=650;
+ if(img1&&img2){drawImageCover(img1,photoX,photoY,320,photoH);drawImageCover(img2,photoX+330,photoY,320,photoH);x.fillStyle=paper;x.fillRect(photoX+320,photoY,10,photoH)}
+ else if(img1){drawImageCover(img1,photoX,photoY,photoW,photoH)}
+ else if(img2){drawImageCover(img2,photoX,photoY,photoW,photoH)}
+ else{drawPlaceholder(photoX,photoY,photoW,photoH,'ここに本の写真を入れてください')}
  const rx=750,rw=435;
  pill('ステータス',rx,250,150,ink,soft);rr(rx,310,rw,58,10,'#fff');x.strokeStyle='#d5d0ca';x.lineWidth=2;x.stroke();x.fillStyle=ink;x.font='22px sans-serif';x.fillText(status,rx+18,346);
- if(showCondition){pill('本の状態',rx,390,150,ink,soft);rr(rx,450,rw,58,10,'#fff');x.strokeStyle='#d5d0ca';x.stroke();x.fillStyle=ink;x.font='22px sans-serif';x.fillText(condition,rx+18,486)}
- const infoY=showCondition?555:480;
- pill('書籍名',rx,infoY,130,ink,soft);x.fillStyle=title.empty?mix(ink,'#fff',.35):ink;x.font='700 40px sans-serif';wrap(title.text,rw, x.font).slice(0,2).forEach((l,i)=>x.fillText(l,rx,infoY+78+i*50));
- const metaY=infoY+185;
- [['著者名',author],['出版社',pub],['出版年',year],['キーワード／ジャンルなど',keywords]].forEach((m,i)=>{let y=metaY+i*70;pill(m[0],rx,y,Math.min(270,40+m[0].length*24),ink,soft);x.fillStyle=m[1].empty?mix(ink,'#fff',.35):ink;x.font='21px sans-serif';let lines=wrap(m[1].text,rw, x.font);lines.slice(0,1).forEach(l=>x.fillText(l,rx,y+78))});
- // Introduction fills lower area
- const blurbTop=Math.max(930,metaY+4*70+100);pill('紹介文',55,blurbTop,140,ink,soft);x.fillStyle='#fff';x.strokeStyle='#d5d0ca';x.lineWidth=2;x.roundRect(55,blurbTop+60,1130,430,14);x.fill();x.stroke();x.fillStyle=blurb.empty?mix(ink,'#fff',.35):ink;x.font='22px sans-serif';wrap(blurb.text,1080,x.font).slice(0,15).forEach((l,i)=>x.fillText(l,80,blurbTop+105+i*39));
- // no fixed footer; content intentionally uses full page
+ let rightY=400;
+ if(showCondition){pill('本の状態',rx,rightY,150,ink,soft);rr(rx,rightY+60,rw,58,10,'#fff');x.strokeStyle='#d5d0ca';x.stroke();x.fillStyle=ink;x.font='22px sans-serif';x.fillText(condition,rx+18,rightY+96);rightY+=145}
+ // Book title
+ pill('書籍名',rx,rightY,130,ink,soft);x.fillStyle=title.empty?mix(ink,'#fff',.35):ink;x.font='700 40px sans-serif';wrap(title.text,rw,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,rx,rightY+78+i*50));
+ rightY += 185;
+ // Author / publisher
+ const colGap=18, colW=(rw-colGap)/2;
+ pill('著者名',rx,rightY,130,ink,soft);x.fillStyle=author.empty?mix(ink,'#fff',.35):ink;x.font='21px sans-serif';wrap(author.text,colW,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,rx,rightY+78+i*31));
+ pill('出版社',rx+colW+colGap,rightY,130,ink,soft);x.fillStyle=pub.empty?mix(ink,'#fff',.35):ink;wrap(pub.text,colW,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,rx+colW+colGap,rightY+78+i*31));
+ rightY += 120;
+ // Year / keywords
+ pill('出版年',rx,rightY,130,ink,soft);x.fillStyle=year.empty?mix(ink,'#fff',.35):ink;wrap(year.text,colW,x.font).slice(0,1).forEach(l=>x.fillText(l,rx,rightY+78));
+ pill('キーワード／ジャンルなど',rx+colW+colGap,rightY,250,ink,soft);x.fillStyle=keywords.empty?mix(ink,'#fff',.35):ink;wrap(keywords.text,colW,x.font).slice(0,2).forEach((l,i)=>x.fillText(l,rx+colW+colGap,rightY+78+i*31));
+ // Introduction spans full width and uses the lower area
+ const blurbTop=1035;
+ pill('紹介文',55,blurbTop,140,ink,soft);
+ x.fillStyle='#fff';x.strokeStyle='#d5d0ca';x.lineWidth=2;x.beginPath();x.roundRect(55,blurbTop+60,1130,510,14);x.fill();x.stroke();
+ x.fillStyle=blurb.empty?mix(ink,'#fff',.35):ink;x.font='22px sans-serif';wrap(blurb.text,1080,x.font).slice(0,18).forEach((l,i)=>x.fillText(l,80,blurbTop+105+i*39));
 }
 ['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).oninput=draw);
 $('status').onchange=()=>{$('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');draw()};
