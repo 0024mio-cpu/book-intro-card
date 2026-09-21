@@ -40,7 +40,7 @@ button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:8
 .help{margin:9px 0 0;font-size:12px;color:#5f5a56;line-height:1.55}
 @media(max-width:700px){
  body{background:#f5f5f5}main{padding:10px}.grid{display:flex;flex-direction:column;gap:12px}.form-box{order:1}.preview-box{order:2;position:static}.box{padding:12px;border-radius:12px}
- header{padding:11px 14px}header b{font-size:16px}.actions{position:sticky;bottom:8px;z-index:4;background:#fff;padding:8px;border-radius:12px;box-shadow:0 2px 12px #0002;margin-left:-4px;margin-right:-4px}button.action{font-size:14px}
+ header{padding:11px 14px}header b{font-size:16px}.actions{padding:8px;background:#fff;border-radius:12px;box-shadow:0 2px 12px #0002;margin-left:-4px;margin-right:-4px}button.action{font-size:14px}
 }
 </style>
 </head>
@@ -82,13 +82,13 @@ button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:8
 <div id="conditionWrap" hidden><label for="condition">本の状態</label><select id="condition"><option value="非常に良い">非常に良い</option><option value="良い">良い</option><option value="可">可</option></select></div>
 <label for="blurb">紹介文</label>
 <textarea id="blurb" placeholder="この本のおすすめポイントや、どんな方に読んでほしいかなどを自由に書いてください。"></textarea>
-<div class="actions"><button class="action s" id="share">📤 共有する</button><button class="action p" id="save">📥 画像として保存</button></div>
-<p class="help">完成したカードはPNG画像として保存できます。スマートフォンでは、保存した画像をWeChat・LINEなどで送れます。</p>
 </section>
 
 <section class="box preview-box">
 <p class="section-title">② 完成イメージ</p>
 <canvas id="c" width="1240" height="1754"></canvas>
+<div class="actions preview-actions"><button class="action s" id="share">📤 共有する</button><button class="action p" id="save">📥 画像として保存</button></div>
+<p class="help">完成したカードはPNG画像として保存できます。スマートフォンでは、保存した画像をWeChat・LINEなどで送れます。</p>
 <p class="help">入力内容や色、写真を変更すると、ここにリアルタイムで反映されます。</p>
 </section>
 </div>
