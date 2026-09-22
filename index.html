@@ -38,6 +38,10 @@ input::placeholder,textarea::placeholder{color:#aaa}
 button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer}
 .p{background:var(--ink);color:#fff}.s{background:var(--soft);color:var(--ink)}
 .help{margin:9px 0 0;font-size:12px;color:#5f5a56;line-height:1.55}
+.draft-actions{margin-top:10px}
+#savePanel{margin-top:12px;padding:12px;background:#f8f7f3;border:1px solid #ddd6ce;border-radius:12px;text-align:center;color:#4c332b;line-height:1.55}
+#savePanel p{margin:4px 0 8px;font-size:13px}
+#savePanel img{display:block;width:100%;height:auto;border-radius:6px;background:#fff}
 @media(max-width:700px){
  body{background:#f5f5f5}main{padding:10px}.grid{display:flex;flex-direction:column;gap:12px}.form-box{order:1}.preview-box{order:2;position:static}.box{padding:12px;border-radius:12px}
  header{padding:11px 14px}header b{font-size:16px}.actions{padding:8px;background:#fff;border-radius:12px;box-shadow:0 2px 12px #0002;margin-left:-4px;margin-right:-4px}button.action{font-size:14px}
@@ -82,12 +86,15 @@ button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:8
 <div id="conditionWrap" hidden><label for="condition">本の状態</label><select id="condition"><option value="非常に良い">非常に良い</option><option value="良い">良い</option><option value="可">可</option></select></div>
 <label for="blurb">紹介文</label>
 <textarea id="blurb" placeholder="この本のおすすめポイントや、どんな方に読んでほしいかなどを自由に書いてください。"></textarea>
+<div class="actions draft-actions"><button type="button" class="action s" id="saveDraft">💾 下書きを保存</button><button type="button" class="action s" id="clearDraft">🗑 下書きを消去</button></div>
+<p class="help">入力内容はこの端末のブラウザにも自動保存されます。あとで同じ端末から開くと続きから編集できます。</p>
 </section>
 
 <section class="box preview-box">
 <p class="section-title">② 完成イメージ</p>
 <canvas id="c" width="1240" height="1754"></canvas>
 <div class="actions preview-actions"><button class="action s" id="share">📤 共有する</button><button class="action p" id="save">📥 画像として保存</button></div>
+<div id="savePanel" hidden class="save-panel"><p><b>画像ができました</b></p><p>スマートフォンでは、下の画像を<strong>長押しして「写真に保存」</strong>してください。</p><img id="savePreview" alt="保存用の本紹介カード"></div>
 <p class="help">完成したカードはJPEG画像として保存できます。スマートフォンでは、保存した画像をWeChat・LINEなどで送れます。</p>
 <p class="help">入力内容や色、写真を変更すると、ここにリアルタイムで反映されます。</p>
 </section>
@@ -110,9 +117,9 @@ function mix(a,b,t){let A=hexToRgb(a),B=hexToRgb(b);return '#'+[A.r,A.g,A.b].map
 function luminance(h){let{r,g,b}=hexToRgb(h);[r,g,b]=[r,g,b].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*r+.7152*g+.0722*b}
 function makeTheme(accent){let dark=luminance(accent)>0.48?mix(accent,'#2f211b',.62):mix(accent,'#111111',.42);return{accent,ink:dark,soft:mix(accent,'#ffffff',.80),paper:mix(accent,'#ffffff',.95)}}
 function setTheme(theme){document.documentElement.style.setProperty('--accent',theme.accent);document.documentElement.style.setProperty('--ink',theme.ink);document.documentElement.style.setProperty('--soft',theme.soft);document.documentElement.style.setProperty('--paper',theme.paper);draw()}
-function selectTheme(theme,el){document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');setTheme(theme)}
+function selectTheme(theme,el){document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');$('customColor').value=theme.accent;setTheme(theme);saveDraft()}
 palettes.forEach((p,i)=>{let b=document.createElement('button');b.type='button';b.className='swatch'+(i===0?' active':'');b.title=p.name;b.setAttribute('aria-label',p.name);b.style.background=p.accent;b.onclick=()=>selectTheme(p,b);$('palette').appendChild(b)});
-$('customColor').oninput=e=>{document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));setTheme(makeTheme(e.target.value))};
+$('customColor').oninput=e=>{document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));setTheme(makeTheme(e.target.value));saveDraft()};
 function wrap(t,w,f){x.font=f;let a=[];for(let p of String(t||'').split('\n')){let l='';for(let ch of p){if(x.measureText(l+ch).width>w&&l){a.push(l);l=ch}else l+=ch}a.push(l)}return a}
 function rr(a,b,w,h,r,col){x.fillStyle=col;x.beginPath();x.roundRect(a,b,w,h,r);x.fill()}
 function pill(text,x0,y0,w0,ink,soft){rr(x0,y0,w0,46,22,soft);x.fillStyle=ink;x.font='700 21px sans-serif';x.textAlign='center';x.fillText(text,x0+w0/2,y0+30);x.textAlign='left'}
@@ -166,17 +173,47 @@ function draw(){
  fieldBox('キーワード／ジャンルなど',keywords.text,rx+colW+colGap,rightY,colW,72,ink,soft,{size:21,weight:500,placeholder:keywords.empty,lines:2});
  // Introduction spans the lower area
  const blurbTop=Math.max(1035, photoY+photoH+70);
- const blurbH=1754-blurbTop-45;
- fieldBox('紹介文',blurb.text,55,blurbTop,1130,blurbH,ink,soft,{size:30,weight:500,placeholder:blurb.empty,lines:20});
+ const blurbH=Math.max(500,1754-blurbTop-85);
+ fieldBox('紹介文',blurb.text,55,blurbTop,1130,blurbH,ink,soft,{size:30,weight:500,placeholder:blurb.empty,lines:18});
 }
-['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).oninput=draw);
-$('status').onchange=()=>{$('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');draw()};
-$('condition').onchange=draw;$('conditionWrap').hidden=true;
-function loadPhoto(inputId,setter){$(inputId).onchange=e=>{let f=e.target.files[0];if(!f)return;let i=new Image();i.onload=()=>{setter(i);draw()};i.src=URL.createObjectURL(f)}}
-loadPhoto('photo1',i=>img1=i);loadPhoto('photo2',i=>img2=i);
-$('save').onclick=()=>{let a=document.createElement('a');a.download='book_introduction.jpg';a.href=c.toDataURL('image/jpeg',0.92);a.click()};
+['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).oninput=()=>{draw();saveDraft()});
+$('status').onchange=()=>{$('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');draw();saveDraft()};
+$('condition').onchange=()=>{draw();saveDraft()};$('conditionWrap').hidden=true;
+function imageToDataURL(file,maxSide=1400,quality=.78){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const scale=Math.min(1,maxSide/Math.max(i.width,i.height));const w=Math.round(i.width*scale),h=Math.round(i.height*scale);const cc=document.createElement('canvas');cc.width=w;cc.height=h;cc.getContext('2d').drawImage(i,0,0,w,h);resolve(cc.toDataURL('image/jpeg',quality))};i.onerror=reject;i.src=r.result};r.onerror=reject;r.readAsDataURL(file)})}
+function dataURLToImage(src){return new Promise((resolve,reject)=>{if(!src)return resolve(null);const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src})}
+function loadPhoto(inputId,setter,key){$(inputId).onchange=async e=>{let f=e.target.files[0];if(!f)return;try{const data=await imageToDataURL(f);const i=await dataURLToImage(data);setter(i);draw();saveDraft();}catch(err){alert('写真を読み込めませんでした。もう一度お試しください。')}}}
+loadPhoto('photo1',i=>img1=i,'photo1');loadPhoto('photo2',i=>img2=i,'photo2');
+const DRAFT_KEY='little-bites-book-card-v9';
+function currentDraft(){const theme=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();return{theme,customColor:$('customColor').value,headline:$('headline').value,introducer:$('introducer').value,title:$('title').value,author:$('author').value,pub:$('pub').value,year:$('year').value,keywords:$('keywords').value,status:$('status').value,condition:$('condition').value,blurb:$('blurb').value,photo1:img1?imageDataForDraft(img1):null,photo2:img2?imageDataForDraft(img2):null}}
+function imageDataForDraft(img){const maxSide=1400,scale=Math.min(1,maxSide/Math.max(img.width,img.height));const w=Math.round(img.width*scale),h=Math.round(img.height*scale);const cc=document.createElement('canvas');cc.width=w;cc.height=h;cc.getContext('2d').drawImage(img,0,0,w,h);return cc.toDataURL('image/jpeg',.78)}
+let draftTimer;
+function saveDraft(){clearTimeout(draftTimer);draftTimer=setTimeout(()=>{try{localStorage.setItem(DRAFT_KEY,JSON.stringify(currentDraft()))}catch(e){/* 容量超過等の場合は入力自体を妨げない */}},120)}
+async function restoreDraft(){try{const raw=localStorage.getItem(DRAFT_KEY);if(!raw)return;const d=JSON.parse(raw);['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>{if(d[id]!=null)$(id).value=d[id]});if(d.status)$( 'status').value=d.status;if(d.condition)$( 'condition').value=d.condition;$('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');if(d.customColor) $('customColor').value=d.customColor;if(d.theme)setTheme(makeTheme(d.theme));if(d.photo1)img1=await dataURLToImage(d.photo1);if(d.photo2)img2=await dataURLToImage(d.photo2);draw()}catch(e){console.warn('draft restore failed',e)}}
+$('saveDraft').onclick=()=>{saveDraft();setTimeout(()=>alert('この端末に下書きを保存しました。'),180)};
+$('clearDraft').onclick=()=>{if(!confirm('保存してある下書きを消去しますか？'))return;localStorage.removeItem(DRAFT_KEY);['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).value='');$('status').value='紹介のみ';$('condition').value='非常に良い';$('conditionWrap').hidden=true;img1=null;img2=null;$('photo1').value='';$('photo2').value='';draw()};
+$('save').onclick=()=>{
+  const panel=$('savePanel');
+  const preview=$('savePreview');
+  c.toBlob(blob=>{
+    if(!blob){alert('画像を作成できませんでした。もう一度お試しください。');return}
+    const url=URL.createObjectURL(blob);
+    preview.onload=()=>URL.revokeObjectURL(url);
+    preview.src=url;
+    panel.hidden=false;
+    panel.scrollIntoView({behavior:'smooth',block:'center'});
+    // PCなどdownload属性に対応する環境では、あわせて通常のダウンロードも試みる
+    const a=document.createElement('a');
+    a.download='book_introduction.jpg';
+    a.href=url;
+    a.style.display='none';
+    document.body.appendChild(a);
+    try{a.click()}catch(e){}
+    setTimeout(()=>a.remove(),1000);
+  },'image/jpeg',0.92);
+};
 $('share').onclick=()=>c.toBlob(async b=>{let f=new File([b],'book_introduction.jpg',{type:'image/jpeg'});if(navigator.share&&navigator.canShare?.({files:[f]})){try{await navigator.share({title:'本の紹介カード',files:[f]})}catch(e){}}else alert('この端末では直接共有できません。「画像として保存」を使ってください。')},'image/jpeg');
 setTheme(palettes[0]);
+restoreDraft();
 </script>
 </body>
 </html>
