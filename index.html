@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#a9c9bb">
-<title>本の紹介カード</title>
+<title>本の紹介カード v15</title>
 <style>
 *{box-sizing:border-box}
 :root{--accent:#a9c9bb;--ink:#4c332b;--soft:#e2eee9;--paper:#faf8f2}
@@ -38,7 +38,6 @@ input::placeholder,textarea::placeholder{color:#aaa}
 button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer}
 .p{background:var(--ink);color:#fff}.s{background:var(--soft);color:var(--ink)}
 .help{margin:9px 0 0;font-size:12px;color:#5f5a56;line-height:1.55}
-.draft-actions{margin-top:10px}
 #savePanel{margin-top:12px;padding:12px;background:#f8f7f3;border:1px solid #ddd6ce;border-radius:12px;text-align:center;color:#4c332b;line-height:1.55}
 #savePanel p{margin:4px 0 8px;font-size:13px}
 #savePanel img{display:block;width:100%;height:auto;border-radius:6px;background:#fff}
@@ -89,8 +88,7 @@ button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:8
 <label for="blurb">紹介文（300文字まで）</label>
 <textarea id="blurb" maxlength="300" placeholder="この本のおすすめポイントや、どんな方に読んでほしいかなどを自由に書いてください。"></textarea>
 <div class="char-count" id="blurbCount">0 / 300文字</div><p class="help">完成画像では300文字以内でも表示スペースに収まるよう自動調整されます。長文の場合は文字が小さくなるため、200文字前後がおすすめです。</p>
-<div class="actions draft-actions"><button type="button" class="action s" id="saveDraft">💾 下書きを保存</button><button type="button" class="action s" id="clearDraft">🗑 下書きを消去</button></div>
-<p class="help">入力内容はこの端末のブラウザにも自動保存されます。あとで同じ端末から開くと続きから編集できます。</p>
+<p class="help" style="margin-top:14px"><strong>💡 このページは下書きを保存しません。</strong><br>文章はスマホのメモアプリなどで作成しておき、ここにはコピー＆ペーストしてご利用ください。修正する場合は、メモアプリで文章を直してから、もう一度このページに入力してください。</p>
 </section>
 
 <section class="box preview-box">
@@ -100,6 +98,7 @@ button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:8
 <div id="savePanel" hidden class="save-panel"><p><b>画像ができました</b></p><p>スマートフォンでは、下の画像を<strong>長押しして「写真に保存」</strong>してください。</p><img id="savePreview" alt="保存用の本紹介カード"></div>
 <p class="help">完成したカードはJPEG画像として保存できます。スマートフォンでは、保存した画像をWeChat・LINEなどで送れます。</p>
 <p class="help">入力内容や色、写真を変更すると、ここにリアルタイムで反映されます。</p>
+<p class="help"><strong>※このページでは下書き保存・自動保存は行いません。</strong> 完成画像を保存したあとに修正する場合は、元のメモなどを編集して、もう一度入力してください。</p>
 </section>
 </div>
 </main>
@@ -121,9 +120,9 @@ function mix(a,b,t){let A=hexToRgb(a),B=hexToRgb(b);return '#'+[A.r,A.g,A.b].map
 function luminance(h){let{r,g,b}=hexToRgb(h);[r,g,b]=[r,g,b].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*r+.7152*g+.0722*b}
 function makeTheme(accent){let dark=luminance(accent)>0.48?mix(accent,'#2f211b',.62):mix(accent,'#111111',.42);return{accent,ink:dark,soft:mix(accent,'#ffffff',.80),paper:mix(accent,'#ffffff',.95)}}
 function setTheme(theme){document.documentElement.style.setProperty('--accent',theme.accent);document.documentElement.style.setProperty('--ink',theme.ink);document.documentElement.style.setProperty('--soft',theme.soft);document.documentElement.style.setProperty('--paper',theme.paper);draw()}
-function selectTheme(theme,el){document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');$('customColor').value=theme.accent;setTheme(theme);saveDraft()}
+function selectTheme(theme,el){document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');$('customColor').value=theme.accent;setTheme(theme)}
 palettes.forEach((p,i)=>{let b=document.createElement('button');b.type='button';b.className='swatch'+(i===0?' active':'');b.title=p.name;b.setAttribute('aria-label',p.name);b.style.background=p.accent;b.onclick=()=>selectTheme(p,b);$('palette').appendChild(b)});
-$('customColor').oninput=e=>{document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));setTheme(makeTheme(e.target.value));saveDraft()};
+$('customColor').oninput=e=>{document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));setTheme(makeTheme(e.target.value))};
 function wrap(t,w,f){x.font=f;let a=[];for(let p of String(t||'').split('\n')){let l='';for(let ch of p){if(x.measureText(l+ch).width>w&&l){a.push(l);l=ch}else l+=ch}a.push(l)}return a}
 function rr(a,b,w,h,r,col){x.fillStyle=col;x.beginPath();x.roundRect(a,b,w,h,r);x.fill()}
 function pill(text,x0,y0,w0,ink,soft){rr(x0,y0,w0,46,22,soft);x.fillStyle=ink;x.font='700 21px sans-serif';x.textAlign='center';x.fillText(text,x0+w0/2,y0+30);x.textAlign='left'}
@@ -196,75 +195,19 @@ function draw(){
  const blurbLines=Math.max(1,Math.floor((blurbH-22)/(30+9)));
  fieldBox('紹介文',blurb.text,55,blurbTop,1130,blurbH,ink,soft,{size:30,weight:500,placeholder:blurb.empty,lines:blurbLines});
 }
-['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).oninput=()=>{draw();saveDraft()});
-$('status').onchange=()=>{$('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');draw();saveDraft()};
-$('condition').onchange=()=>{draw();saveDraft()};$('conditionWrap').hidden=true;
+['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).oninput=()=>draw());
+$('status').onchange=()=>{$('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');draw()};
+$('condition').onchange=()=>draw();$('conditionWrap').hidden=true;
 function imageToDataURL(file,maxSide=1400,quality=.78){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const scale=Math.min(1,maxSide/Math.max(i.width,i.height));const w=Math.round(i.width*scale),h=Math.round(i.height*scale);const cc=document.createElement('canvas');cc.width=w;cc.height=h;cc.getContext('2d').drawImage(i,0,0,w,h);resolve(cc.toDataURL('image/jpeg',quality))};i.onerror=reject;i.src=r.result};r.onerror=reject;r.readAsDataURL(file)})}
 function dataURLToImage(src){return new Promise((resolve,reject)=>{if(!src)return resolve(null);const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src})}
-function loadPhoto(inputId,setter,key){$(inputId).onchange=async e=>{let f=e.target.files[0];if(!f)return;try{const data=await imageToDataURL(f);const i=await dataURLToImage(data);setter(i);draw();saveDraft();}catch(err){alert('写真を読み込めませんでした。もう一度お試しください。')}}}
-loadPhoto('photo1',i=>img1=i,'photo1');loadPhoto('photo2',i=>img2=i,'photo2');
-const DRAFT_KEY='little-bites-book-card-v14';
-const LEGACY_DRAFT_KEYS=['little-bites-book-card-v11'];
-const DRAFT_DB='little-bites-book-card-db-v3',DRAFT_STORE='draft';
-function currentDraft(){const accent=$('customColor').value;return{version:14,theme:accent,customColor:accent,headline:$('headline').value,introducer:$('introducer').value,title:$('title').value,author:$('author').value,pub:$('pub').value,year:$('year').value,keywords:$('keywords').value,status:$('status').value,condition:$('condition').value,blurb:$('blurb').value,savedAt:Date.now()}}
-function imageBlobForDraft(img,maxSide=1100,quality=.72){return new Promise((resolve,reject)=>{if(!img)return resolve(null);const scale=Math.min(1,maxSide/Math.max(img.width,img.height));const w=Math.round(img.width*scale),h=Math.round(img.height*scale);const cc=document.createElement('canvas');cc.width=w;cc.height=h;cc.getContext('2d').drawImage(img,0,0,w,h);cc.toBlob(b=>b?resolve(b):reject(new Error('画像変換に失敗しました')),'image/jpeg',quality)})}
-function openDraftDB(){return new Promise((resolve,reject)=>{if(!('indexedDB' in window)){resolve(null);return}const req=indexedDB.open(DRAFT_DB,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(DRAFT_STORE))db.createObjectStore(DRAFT_STORE)};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
-function idbPut(value){return openDraftDB().then(db=>{if(!db)return;return new Promise((resolve,reject)=>{const tx=db.transaction(DRAFT_STORE,'readwrite');tx.objectStore(DRAFT_STORE).put(value,'current');tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})})}
-function idbGet(){return openDraftDB().then(db=>{if(!db)return null;return new Promise((resolve,reject)=>{const tx=db.transaction(DRAFT_STORE,'readonly');const req=tx.objectStore(DRAFT_STORE).get('current');req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);tx.oncomplete=()=>db.close()})})}
-function idbDelete(){return openDraftDB().then(db=>{if(!db)return;return new Promise((resolve,reject)=>{const tx=db.transaction(DRAFT_STORE,'readwrite');tx.objectStore(DRAFT_STORE).delete('current');tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})})}
-async function loadImageSafe(blobOrUrl){
-  if(!blobOrUrl)return null;
-  let src=blobOrUrl, revoke=false;
-  if(blobOrUrl instanceof Blob){src=URL.createObjectURL(blobOrUrl);revoke=true}
-  try{
-    const img=await new Promise((resolve,reject)=>{const i=new Image();let done=false;const finish=(fn,v)=>{if(done)return;done=true;clearTimeout(timer);fn(v)};const timer=setTimeout(()=>finish(reject,new Error('画像の読み込みがタイムアウトしました')),8000);i.onload=()=>finish(resolve,i);i.onerror=()=>finish(reject,new Error('画像を読み込めませんでした'));i.src=src});
-    return img;
-  }finally{if(revoke)URL.revokeObjectURL(src)}
-}
-let draftTimer;
-async function saveDraftNow(){
-  const base=currentDraft();
-  // テキスト等は軽量なlocalStorageにも保存。画像があっても復元できる最低限の下書きを確保する。
-  try{localStorage.setItem(DRAFT_KEY,JSON.stringify(base))}catch(e){console.warn('text draft save failed',e)}
-  try{
-    const draft={...base,photo1:await imageBlobForDraft(img1),photo2:await imageBlobForDraft(img2)};
-    await idbPut(draft);
-  }catch(e){console.warn('draft image save failed',e)}
-}
-function updateBlurbCount(){const n=$('blurb').value.length;$('blurbCount').textContent=`${n} / 300文字`;}$('blurb').addEventListener('input',updateBlurbCount);updateBlurbCount();
-function saveDraft(){clearTimeout(draftTimer);draftTimer=setTimeout(()=>{saveDraftNow()},250)}
-function applyDraftText(d){
-  ['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>{if(d[id]!=null)$(id).value=d[id]});
-  if(d.status)$( 'status').value=d.status;if(d.condition)$( 'condition').value=d.condition;
-  $('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');
-  const restoredColor=d.customColor||d.theme||'#a9c9bb';$('customColor').value=restoredColor;setTheme(makeTheme(restoredColor));updateBlurbCount();
-}
-async function restoreDraft({force=false}={}){
-  let d=null;
-  try{const raw=localStorage.getItem(DRAFT_KEY);if(raw)d=JSON.parse(raw)}catch(e){console.warn('text draft restore failed',e)}
-  if(!d){for(const key of LEGACY_DRAFT_KEYS){try{const raw=localStorage.getItem(key);if(raw){d=JSON.parse(raw);break}}catch(e){}}}
-  if(d){try{applyDraftText(d)}catch(e){console.warn('apply draft failed',e)}; try{draw()}catch(e){console.warn('initial redraw failed',e)}}
-  try{
-    const saved=await idbGet();
-    if(saved){
-      if(!d){try{applyDraftText(saved)}catch(e){console.warn('apply saved draft failed',e)}}
-      if(saved.photo1){try{img1=await loadImageSafe(saved.photo1)}catch(e){img1=null;console.warn('photo1 restore failed',e)}}
-      if(saved.photo2){try{img2=await loadImageSafe(saved.photo2)}catch(e){img2=null;console.warn('photo2 restore failed',e)}}
-    }
-  }catch(e){console.warn('draft image restore failed',e)}
-  try{draw()}catch(e){console.warn('final redraw failed',e); drawFallback()}
-}
-function drawFallback(){
-  try{
-    const cs=getComputedStyle(document.documentElement),accent=cs.getPropertyValue('--accent').trim()||'#a9c9bb',ink=cs.getPropertyValue('--ink').trim()||'#4c332b',paper=cs.getPropertyValue('--paper').trim()||'#faf8f2';
-    x.fillStyle=paper;x.fillRect(0,0,1240,1754);x.fillStyle=accent;x.fillRect(0,0,1240,205);x.fillStyle=ink;x.font='700 48px sans-serif';x.fillText(($('headline').value||''),55,62);x.font='700 34px sans-serif';x.fillText(($('introducer').value||''),55,158);
-    const lines=[['書籍名',$('title').value||'書籍名'],['著者名',$('author').value||'著者名'],['出版社',$('pub').value||'出版社名'],['出版年',$('year').value||'出版年'],['キーワード／ジャンルなど',$('keywords').value||'']];
-    let yy=280;x.font='700 30px sans-serif';for(const [lab,val] of lines){x.fillText(lab,750,yy);x.font='500 28px sans-serif';x.fillText(String(val).slice(0,24),750,yy+42);yy+=110;x.font='700 30px sans-serif'}
-    x.font='500 30px sans-serif';const bl=$('blurb').value||'';wrap(bl,1130,x.font).slice(0,22).forEach((l,i)=>x.fillText(l,55,1080+i*40));
-  }catch(e){console.error('fallback draw failed',e)}
-}
-$('saveDraft').onclick=async()=>{clearTimeout(draftTimer);await saveDraftNow();draw();alert('この端末に下書きを保存しました。')};
-$('clearDraft').onclick=async()=>{if(!confirm('保存してある下書きを消去しますか？'))return;clearTimeout(draftTimer);try{localStorage.removeItem(DRAFT_KEY);LEGACY_DRAFT_KEYS.forEach(k=>localStorage.removeItem(k))}catch(e){}try{await idbDelete()}catch(e){}['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).value='');$('status').value='紹介のみ';$('condition').value='非常に良い';$('conditionWrap').hidden=true;img1=null;img2=null;$('photo1').value='';$('photo2').value='';$('customColor').value='#a9c9bb';document.querySelectorAll('.swatch').forEach((b,i)=>b.classList.toggle('active',i===0));setTheme(palettes[0]);updateBlurbCount();draw()};
+function loadPhoto(inputId,setter){$(inputId).onchange=async e=>{let f=e.target.files[0];if(!f)return;try{const data=await imageToDataURL(f);const i=await dataURLToImage(data);setter(i);draw();}catch(err){alert('写真を読み込めませんでした。もう一度お試しください。')}}}
+loadPhoto('photo1',i=>img1=i);loadPhoto('photo2',i=>img2=i);
+// v15: 下書き保存機能は廃止。入力内容はページを閉じると保持されません。
+// 以前のバージョンが残したテキスト下書きだけ、初回表示時に削除します。
+try{
+  ['little-bites-book-card-v14','little-bites-book-card-v11'].forEach(k=>localStorage.removeItem(k));
+  if('indexedDB' in window){indexedDB.deleteDatabase('little-bites-book-card-db-v3');}
+}catch(e){}
 $('save').onclick=()=>{
   const panel=$('savePanel');
   const preview=$('savePreview');
@@ -287,14 +230,7 @@ $('save').onclick=()=>{
 };
 $('share').onclick=()=>c.toBlob(async b=>{let f=new File([b],'book_introduction.jpg',{type:'image/jpeg'});if(navigator.share&&navigator.canShare?.({files:[f]})){try{await navigator.share({title:'本の紹介カード',files:[f]})}catch(e){}}else alert('この端末では直接共有できません。「画像として保存」を使ってください。')},'image/jpeg');
 setTheme(palettes[0]);
-// Mobile browsers may discard a canvas bitmap while a page is suspended/backgrounded.
-// Always redraw when the page becomes visible again, and rebuild the 2D context if needed.
-c.addEventListener('contextlost',e=>{e.preventDefault()});
-c.addEventListener('contextrestored',()=>{x=c.getContext('2d');setTimeout(()=>restoreDraft(),50)});
-window.addEventListener('pageshow',()=>setTimeout(()=>restoreDraft(),80));
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>{try{draw()}catch(e){restoreDraft()}},80)});
-window.addEventListener('focus',()=>setTimeout(()=>{try{draw()}catch(e){restoreDraft()}},80));
-restoreDraft();
+draw();
 </script>
 </body>
 </html>
