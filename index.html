@@ -71,9 +71,9 @@ button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:8
 <input id="headline" maxlength="40" placeholder="例：心が少し、やさしくなる一冊">
 <label for="introducer">紹介者名（無記名でも可）</label>
 <input id="introducer" maxlength="20" placeholder="例：山田花子">
-<label for="title">書籍名</label>
-<input id="title" maxlength="50" placeholder="例：また、どこかで会えたら">
-<label for="author">著者名</label>
+<label for="title">書籍名（60文字まで）</label>
+<input id="title" maxlength="60" placeholder="例：また、どこかで会えたら">
+<label for="author">著者名（40文字まで）</label>
 <input id="author" maxlength="40" placeholder="例：寺地はるな">
 <label for="pub">出版社名</label>
 <input id="pub" maxlength="40" placeholder="例：中央公論新社">
@@ -88,7 +88,7 @@ button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:8
 <div id="conditionWrap" hidden><label for="condition">本の状態</label><select id="condition"><option value="非常に良い">非常に良い</option><option value="良い">良い</option><option value="可">可</option></select></div>
 <label for="blurb">紹介文（300文字まで）</label>
 <textarea id="blurb" maxlength="300" placeholder="この本のおすすめポイントや、どんな方に読んでほしいかなどを自由に書いてください。"></textarea>
-<div class="char-count" id="blurbCount">0 / 300文字</div>
+<div class="char-count" id="blurbCount">0 / 300文字</div><p class="help">完成画像では300文字以内でも表示スペースに収まるよう自動調整されます。長文の場合は文字が小さくなるため、200文字前後がおすすめです。</p>
 <div class="actions draft-actions"><button type="button" class="action s" id="saveDraft">💾 下書きを保存</button><button type="button" class="action s" id="clearDraft">🗑 下書きを消去</button></div>
 <p class="help">入力内容はこの端末のブラウザにも自動保存されます。あとで同じ端末から開くと続きから編集できます。</p>
 </section>
@@ -131,17 +131,28 @@ function drawPlaceholder(px,py,pw,ph,label){x.save();x.setLineDash([10,8]);x.str
 function drawImageContain(img,px,py,pw,ph){let s=Math.min(pw/img.width,ph/img.height),w=img.width*s,h=img.height*s; x.save(); x.fillStyle='#f7f4ee'; x.fillRect(px,py,pw,ph); x.drawImage(img,px+(pw-w)/2,py+(ph-h)/2,w,h); x.restore()}
 function photoNaturalHeight(imgs,pw,maxH){if(!imgs.length)return 0; let hs=imgs.map(img=>pw/(img.width/img.height)); return Math.min(maxH,Math.max(...hs));}
 function fieldBox(label, valueText, x0, y0, w0, h0, ink, soft, opts={}){
-  const {size=26, weight=500, placeholder=false, lines=2}=opts;
+  const {size=26, weight=500, placeholder=false, lines=2, minSize=18}=opts;
   const labelW=Math.max(120, Math.min(w0-10, 30 + label.length*21));
   pill(label,x0,y0,labelW,ink,soft);
   const boxY=y0+58;
   rr(x0,boxY,w0,h0,12,'#fff');
   x.strokeStyle='#d5d0ca';x.lineWidth=2;x.stroke();
+  let fontSize=size, usedLines=[];
+  while(fontSize>=minSize){
+    const font=`${weight} ${fontSize}px sans-serif`;
+    usedLines=wrap(valueText,w0-34,font).slice(0,lines);
+    if(usedLines.length<=lines)break;
+    fontSize-=1;
+  }
+  const font=`${weight} ${fontSize}px sans-serif`;
+  usedLines=wrap(valueText,w0-34,font).slice(0,lines);
   x.fillStyle=placeholder?mix(ink,'#fff',.42):ink;
-  x.font=`${weight} ${size}px sans-serif`;
-  wrap(valueText,w0-34,x.font).slice(0,lines).forEach((l,i)=>x.fillText(l,x0+17,boxY+size+10+i*(size+9)));
+  x.font=font;
+  const lineH=fontSize+9;
+  usedLines.forEach((l,i)=>x.fillText(l,x0+17,boxY+fontSize+10+i*lineH));
   return boxY+h0;
 }
+
 function draw(){
  const cs=getComputedStyle(document.documentElement),accent=cs.getPropertyValue('--accent').trim(),ink=cs.getPropertyValue('--ink').trim(),soft=cs.getPropertyValue('--soft').trim(),paper=cs.getPropertyValue('--paper').trim();
  x.textAlign='left';x.fillStyle=paper;x.fillRect(0,0,1240,1754);
@@ -165,15 +176,15 @@ function draw(){
  rightY=fieldBox('ステータス',status,rx,rightY,435,64,ink,soft,{size:24,weight:600,lines:1});
  if(showCondition){rightY+=24;rightY=fieldBox('本の状態',condition,rx,rightY,435,64,ink,soft,{size:24,weight:600,lines:1});}
  rightY+=26;
- rightY=fieldBox('書籍名',title.text,rx,rightY,435,104,ink,soft,{size:34,weight:700,placeholder:title.empty,lines:2});
+ rightY=fieldBox('書籍名',title.text,rx,rightY,435,142,ink,soft,{size:34,weight:700,placeholder:title.empty,lines:3,minSize:25});
  rightY+=24;
  const colGap=18,colW=(rw-colGap)/2;
  const y1=rightY;
- fieldBox('著者名',author.text,rx,y1,colW,96,ink,soft,{size:24,weight:500,placeholder:author.empty,lines:2});
- fieldBox('出版社',pub.text,rx+colW+colGap,y1,colW,96,ink,soft,{size:24,weight:500,placeholder:pub.empty,lines:2});
- rightY=y1+96+58+24;
- fieldBox('出版年',year.text,rx,rightY,colW,72,ink,soft,{size:24,weight:500,placeholder:year.empty,lines:1});
- fieldBox('キーワード／ジャンルなど',keywords.text,rx+colW+colGap,rightY,colW,72,ink,soft,{size:21,weight:500,placeholder:keywords.empty,lines:2});
+ fieldBox('著者名',author.text,rx,y1,colW,118,ink,soft,{size:24,weight:500,placeholder:author.empty,lines:3,minSize:18});
+ fieldBox('出版社',pub.text,rx+colW+colGap,y1,colW,118,ink,soft,{size:24,weight:500,placeholder:pub.empty,lines:3,minSize:18});
+ rightY=y1+118+58+24;
+ fieldBox('出版年',year.text,rx,rightY,colW,86,ink,soft,{size:24,weight:500,placeholder:year.empty,lines:2,minSize:18});
+ fieldBox('キーワード／ジャンルなど',keywords.text,rx+colW+colGap,rightY,colW,86,ink,soft,{size:21,weight:500,placeholder:keywords.empty,lines:3,minSize:17});
  // Introduction spans the lower area
  const blurbTop=Math.max(1035, photoY+photoH+70);
  const blurbH=Math.max(500,1754-blurbTop-85);
@@ -187,39 +198,61 @@ function imageToDataURL(file,maxSide=1400,quality=.78){return new Promise((resol
 function dataURLToImage(src){return new Promise((resolve,reject)=>{if(!src)return resolve(null);const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src})}
 function loadPhoto(inputId,setter,key){$(inputId).onchange=async e=>{let f=e.target.files[0];if(!f)return;try{const data=await imageToDataURL(f);const i=await dataURLToImage(data);setter(i);draw();saveDraft();}catch(err){alert('写真を読み込めませんでした。もう一度お試しください。')}}}
 loadPhoto('photo1',i=>img1=i,'photo1');loadPhoto('photo2',i=>img2=i,'photo2');
-const DRAFT_KEY='little-bites-book-card-v11';
-const DRAFT_DB='little-bites-book-card-db-v1',DRAFT_STORE='draft';
-function currentDraft(){const accent=$('customColor').value;return{theme:accent,customColor:accent,headline:$('headline').value,introducer:$('introducer').value,title:$('title').value,author:$('author').value,pub:$('pub').value,year:$('year').value,keywords:$('keywords').value,status:$('status').value,condition:$('condition').value,blurb:$('blurb').value}}
-function imageDataForDraft(img,maxSide=1100,quality=.72){const scale=Math.min(1,maxSide/Math.max(img.width,img.height));const w=Math.round(img.width*scale),h=Math.round(img.height*scale);const cc=document.createElement('canvas');cc.width=w;cc.height=h;cc.getContext('2d').drawImage(img,0,0,w,h);return cc.toDataURL('image/jpeg',quality)}
+const DRAFT_KEY='little-bites-book-card-v13';
+const LEGACY_DRAFT_KEYS=['little-bites-book-card-v11'];
+const DRAFT_DB='little-bites-book-card-db-v2',DRAFT_STORE='draft';
+function currentDraft(){const accent=$('customColor').value;return{version:13,theme:accent,customColor:accent,headline:$('headline').value,introducer:$('introducer').value,title:$('title').value,author:$('author').value,pub:$('pub').value,year:$('year').value,keywords:$('keywords').value,status:$('status').value,condition:$('condition').value,blurb:$('blurb').value,savedAt:Date.now()}}
+function imageBlobForDraft(img,maxSide=1100,quality=.72){return new Promise((resolve,reject)=>{if(!img)return resolve(null);const scale=Math.min(1,maxSide/Math.max(img.width,img.height));const w=Math.round(img.width*scale),h=Math.round(img.height*scale);const cc=document.createElement('canvas');cc.width=w;cc.height=h;cc.getContext('2d').drawImage(img,0,0,w,h);cc.toBlob(b=>b?resolve(b):reject(new Error('画像変換に失敗しました')),'image/jpeg',quality)})}
 function openDraftDB(){return new Promise((resolve,reject)=>{if(!('indexedDB' in window)){resolve(null);return}const req=indexedDB.open(DRAFT_DB,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(DRAFT_STORE))db.createObjectStore(DRAFT_STORE)};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
 function idbPut(value){return openDraftDB().then(db=>{if(!db)return;return new Promise((resolve,reject)=>{const tx=db.transaction(DRAFT_STORE,'readwrite');tx.objectStore(DRAFT_STORE).put(value,'current');tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})})}
 function idbGet(){return openDraftDB().then(db=>{if(!db)return null;return new Promise((resolve,reject)=>{const tx=db.transaction(DRAFT_STORE,'readonly');const req=tx.objectStore(DRAFT_STORE).get('current');req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);tx.oncomplete=()=>db.close()})})}
 function idbDelete(){return openDraftDB().then(db=>{if(!db)return;return new Promise((resolve,reject)=>{const tx=db.transaction(DRAFT_STORE,'readwrite');tx.objectStore(DRAFT_STORE).delete('current');tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})})}
+async function loadImageSafe(blobOrUrl){
+  if(!blobOrUrl)return null;
+  let src=blobOrUrl, revoke=false;
+  if(blobOrUrl instanceof Blob){src=URL.createObjectURL(blobOrUrl);revoke=true}
+  try{
+    const img=await new Promise((resolve,reject)=>{const i=new Image();let done=false;const finish=(fn,v)=>{if(done)return;done=true;clearTimeout(timer);fn(v)};const timer=setTimeout(()=>finish(reject,new Error('画像の読み込みがタイムアウトしました')),8000);i.onload=()=>finish(resolve,i);i.onerror=()=>finish(reject,new Error('画像を読み込めませんでした'));i.src=src});
+    return img;
+  }finally{if(revoke)URL.revokeObjectURL(src)}
+}
 let draftTimer;
 async function saveDraftNow(){
   const base=currentDraft();
-  try{localStorage.setItem(DRAFT_KEY,JSON.stringify(base))}catch(e){}
+  // テキスト等は軽量なlocalStorageにも保存。画像があっても復元できる最低限の下書きを確保する。
+  try{localStorage.setItem(DRAFT_KEY,JSON.stringify(base))}catch(e){console.warn('text draft save failed',e)}
   try{
-    const draft={...base,photo1:img1?imageDataForDraft(img1):null,photo2:img2?imageDataForDraft(img2):null,savedAt:Date.now()};
+    const draft={...base,photo1:await imageBlobForDraft(img1),photo2:await imageBlobForDraft(img2)};
     await idbPut(draft);
   }catch(e){console.warn('draft image save failed',e)}
 }
 function updateBlurbCount(){const n=$('blurb').value.length;$('blurbCount').textContent=`${n} / 300文字`;}$('blurb').addEventListener('input',updateBlurbCount);updateBlurbCount();
 function saveDraft(){clearTimeout(draftTimer);draftTimer=setTimeout(()=>{saveDraftNow()},250)}
+function applyDraftText(d){
+  ['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>{if(d[id]!=null)$(id).value=d[id]});
+  if(d.status)$( 'status').value=d.status;if(d.condition)$( 'condition').value=d.condition;
+  $('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');
+  const restoredColor=d.customColor||d.theme||'#a9c9bb';$('customColor').value=restoredColor;setTheme(makeTheme(restoredColor));updateBlurbCount();
+}
 async function restoreDraft(){
+  let d=null;
+  // まず軽量なテキスト下書きを即時復元して、完成イメージを必ず描画する。
+  try{const raw=localStorage.getItem(DRAFT_KEY);if(raw)d=JSON.parse(raw)}catch(e){console.warn('text draft restore failed',e)}
+  if(!d){for(const key of LEGACY_DRAFT_KEYS){try{const raw=localStorage.getItem(key);if(raw){d=JSON.parse(raw);break}}catch(e){}}}
+  if(d){applyDraftText(d);draw()}
+  // 画像はIndexedDBから後から復元。失敗しても文字だけの完成イメージは残す。
   try{
-    let d=await idbGet();
-    if(!d){const raw=localStorage.getItem(DRAFT_KEY);if(raw)d=JSON.parse(raw)}
-    if(!d)return;
-    ['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>{if(d[id]!=null)$(id).value=d[id]});
-    if(d.status)$( 'status').value=d.status;if(d.condition)$( 'condition').value=d.condition;
-    $('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');
-    if(d.customColor)$('customColor').value=d.customColor;const restoredColor=d.customColor||d.theme||'#a9c9bb';setTheme(makeTheme(restoredColor));
-    if(d.photo1)img1=await dataURLToImage(d.photo1);if(d.photo2)img2=await dataURLToImage(d.photo2);updateBlurbCount();draw();
+    const saved=await idbGet();
+    if(saved){
+      if(!d)applyDraftText(saved);
+      if(saved.photo1)try{img1=await loadImageSafe(saved.photo1)}catch(e){console.warn('photo1 restore failed',e)}
+      if(saved.photo2)try{img2=await loadImageSafe(saved.photo2)}catch(e){console.warn('photo2 restore failed',e)}
+      draw();
+    }
   }catch(e){console.warn('draft restore failed',e);draw()}
 }
 $('saveDraft').onclick=async()=>{clearTimeout(draftTimer);await saveDraftNow();draw();alert('この端末に下書きを保存しました。')};
-$('clearDraft').onclick=async()=>{if(!confirm('保存してある下書きを消去しますか？'))return;clearTimeout(draftTimer);try{localStorage.removeItem(DRAFT_KEY)}catch(e){}try{await idbDelete()}catch(e){}['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).value='');$('status').value='紹介のみ';$('condition').value='非常に良い';$('conditionWrap').hidden=true;img1=null;img2=null;$('photo1').value='';$('photo2').value='';$('customColor').value='#a9c9bb';document.querySelectorAll('.swatch').forEach((b,i)=>b.classList.toggle('active',i===0));setTheme(palettes[0]);updateBlurbCount();draw()};
+$('clearDraft').onclick=async()=>{if(!confirm('保存してある下書きを消去しますか？'))return;clearTimeout(draftTimer);try{localStorage.removeItem(DRAFT_KEY);LEGACY_DRAFT_KEYS.forEach(k=>localStorage.removeItem(k))}catch(e){}try{await idbDelete()}catch(e){}['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).value='');$('status').value='紹介のみ';$('condition').value='非常に良い';$('conditionWrap').hidden=true;img1=null;img2=null;$('photo1').value='';$('photo2').value='';$('customColor').value='#a9c9bb';document.querySelectorAll('.swatch').forEach((b,i)=>b.classList.toggle('active',i===0));setTheme(palettes[0]);updateBlurbCount();draw()};
 $('save').onclick=()=>{
   const panel=$('savePanel');
   const preview=$('savePreview');
