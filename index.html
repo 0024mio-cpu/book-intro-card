@@ -104,7 +104,8 @@ button.action{flex:1;padding:12px 10px;border:0;border-radius:10px;font-weight:8
 </div>
 </main>
 <script>
-const c=document.getElementById('c'),x=c.getContext('2d');
+const c=document.getElementById('c');
+let x=c.getContext('2d');
 let img1=null,img2=null;
 const $=id=>document.getElementById(id);
 const palettes=[
@@ -128,7 +129,11 @@ function rr(a,b,w,h,r,col){x.fillStyle=col;x.beginPath();x.roundRect(a,b,w,h,r);
 function pill(text,x0,y0,w0,ink,soft){rr(x0,y0,w0,46,22,soft);x.fillStyle=ink;x.font='700 21px sans-serif';x.textAlign='center';x.fillText(text,x0+w0/2,y0+30);x.textAlign='left'}
 function value(id,placeholder){let v=$(id).value.trim();return{text:v||placeholder,empty:!v}}
 function drawPlaceholder(px,py,pw,ph,label){x.save();x.setLineDash([10,8]);x.strokeStyle='#c9c2bb';x.lineWidth=3;x.strokeRect(px+12,py+12,pw-24,ph-24);x.setLineDash([]);x.strokeStyle='#aab0ad';x.lineWidth=7;x.strokeRect(px+pw/2-42,py+ph/2-62,84,62);x.beginPath();x.arc(px+pw/2-14,py+ph/2-42,7,0,Math.PI*2);x.fillStyle='#aab0ad';x.fill();x.beginPath();x.moveTo(px+pw/2-34,py+ph/2-10);x.lineTo(px+pw/2-5,py+ph/2-38);x.lineTo(px+pw/2+12,py+ph/2-20);x.lineTo(px+pw/2+32,py+ph/2-8);x.stroke();x.fillStyle='#7e8885';x.font='700 24px sans-serif';x.textAlign='center';x.fillText('IMAGE',px+pw/2,py+ph/2+52);x.font='18px sans-serif';x.fillText(label,px+pw/2,py+ph/2+84);x.textAlign='left';x.restore()}
-function drawImageContain(img,px,py,pw,ph){let s=Math.min(pw/img.width,ph/img.height),w=img.width*s,h=img.height*s; x.save(); x.fillStyle='#f7f4ee'; x.fillRect(px,py,pw,ph); x.drawImage(img,px+(pw-w)/2,py+(ph-h)/2,w,h); x.restore()}
+function drawImageContain(img,px,py,pw,ph){
+  if(!img || !Number.isFinite(img.width) || !Number.isFinite(img.height) || img.width<=0 || img.height<=0){drawPlaceholder(px,py,pw,ph,'写真を読み込めませんでした');return false}
+  let s=Math.min(pw/img.width,ph/img.height),w=img.width*s,h=img.height*s;
+  try{x.save();x.fillStyle='#f7f4ee';x.fillRect(px,py,pw,ph);x.drawImage(img,px+(pw-w)/2,py+(ph-h)/2,w,h);x.restore();return true}catch(e){try{x.restore()}catch(_){} drawPlaceholder(px,py,pw,ph,'写真を読み込めませんでした');return false}
+}
 function photoNaturalHeight(imgs,pw,maxH){if(!imgs.length)return 0; let hs=imgs.map(img=>pw/(img.width/img.height)); return Math.min(maxH,Math.max(...hs));}
 function fieldBox(label, valueText, x0, y0, w0, h0, ink, soft, opts={}){
   const {size=26, weight=500, placeholder=false, lines=2, minSize=18}=opts;
@@ -198,10 +203,10 @@ function imageToDataURL(file,maxSide=1400,quality=.78){return new Promise((resol
 function dataURLToImage(src){return new Promise((resolve,reject)=>{if(!src)return resolve(null);const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src})}
 function loadPhoto(inputId,setter,key){$(inputId).onchange=async e=>{let f=e.target.files[0];if(!f)return;try{const data=await imageToDataURL(f);const i=await dataURLToImage(data);setter(i);draw();saveDraft();}catch(err){alert('写真を読み込めませんでした。もう一度お試しください。')}}}
 loadPhoto('photo1',i=>img1=i,'photo1');loadPhoto('photo2',i=>img2=i,'photo2');
-const DRAFT_KEY='little-bites-book-card-v13';
+const DRAFT_KEY='little-bites-book-card-v14';
 const LEGACY_DRAFT_KEYS=['little-bites-book-card-v11'];
-const DRAFT_DB='little-bites-book-card-db-v2',DRAFT_STORE='draft';
-function currentDraft(){const accent=$('customColor').value;return{version:13,theme:accent,customColor:accent,headline:$('headline').value,introducer:$('introducer').value,title:$('title').value,author:$('author').value,pub:$('pub').value,year:$('year').value,keywords:$('keywords').value,status:$('status').value,condition:$('condition').value,blurb:$('blurb').value,savedAt:Date.now()}}
+const DRAFT_DB='little-bites-book-card-db-v3',DRAFT_STORE='draft';
+function currentDraft(){const accent=$('customColor').value;return{version:14,theme:accent,customColor:accent,headline:$('headline').value,introducer:$('introducer').value,title:$('title').value,author:$('author').value,pub:$('pub').value,year:$('year').value,keywords:$('keywords').value,status:$('status').value,condition:$('condition').value,blurb:$('blurb').value,savedAt:Date.now()}}
 function imageBlobForDraft(img,maxSide=1100,quality=.72){return new Promise((resolve,reject)=>{if(!img)return resolve(null);const scale=Math.min(1,maxSide/Math.max(img.width,img.height));const w=Math.round(img.width*scale),h=Math.round(img.height*scale);const cc=document.createElement('canvas');cc.width=w;cc.height=h;cc.getContext('2d').drawImage(img,0,0,w,h);cc.toBlob(b=>b?resolve(b):reject(new Error('画像変換に失敗しました')),'image/jpeg',quality)})}
 function openDraftDB(){return new Promise((resolve,reject)=>{if(!('indexedDB' in window)){resolve(null);return}const req=indexedDB.open(DRAFT_DB,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(DRAFT_STORE))db.createObjectStore(DRAFT_STORE)};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
 function idbPut(value){return openDraftDB().then(db=>{if(!db)return;return new Promise((resolve,reject)=>{const tx=db.transaction(DRAFT_STORE,'readwrite');tx.objectStore(DRAFT_STORE).put(value,'current');tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})})}
@@ -234,22 +239,29 @@ function applyDraftText(d){
   $('conditionWrap').hidden=!($('status').value==='お譲り可能'||$('status').value==='お譲り・レンタル可能');
   const restoredColor=d.customColor||d.theme||'#a9c9bb';$('customColor').value=restoredColor;setTheme(makeTheme(restoredColor));updateBlurbCount();
 }
-async function restoreDraft(){
+async function restoreDraft({force=false}={}){
   let d=null;
-  // まず軽量なテキスト下書きを即時復元して、完成イメージを必ず描画する。
   try{const raw=localStorage.getItem(DRAFT_KEY);if(raw)d=JSON.parse(raw)}catch(e){console.warn('text draft restore failed',e)}
   if(!d){for(const key of LEGACY_DRAFT_KEYS){try{const raw=localStorage.getItem(key);if(raw){d=JSON.parse(raw);break}}catch(e){}}}
-  if(d){applyDraftText(d);draw()}
-  // 画像はIndexedDBから後から復元。失敗しても文字だけの完成イメージは残す。
+  if(d){try{applyDraftText(d)}catch(e){console.warn('apply draft failed',e)}; try{draw()}catch(e){console.warn('initial redraw failed',e)}}
   try{
     const saved=await idbGet();
     if(saved){
-      if(!d)applyDraftText(saved);
-      if(saved.photo1)try{img1=await loadImageSafe(saved.photo1)}catch(e){console.warn('photo1 restore failed',e)}
-      if(saved.photo2)try{img2=await loadImageSafe(saved.photo2)}catch(e){console.warn('photo2 restore failed',e)}
-      draw();
+      if(!d){try{applyDraftText(saved)}catch(e){console.warn('apply saved draft failed',e)}}
+      if(saved.photo1){try{img1=await loadImageSafe(saved.photo1)}catch(e){img1=null;console.warn('photo1 restore failed',e)}}
+      if(saved.photo2){try{img2=await loadImageSafe(saved.photo2)}catch(e){img2=null;console.warn('photo2 restore failed',e)}}
     }
-  }catch(e){console.warn('draft restore failed',e);draw()}
+  }catch(e){console.warn('draft image restore failed',e)}
+  try{draw()}catch(e){console.warn('final redraw failed',e); drawFallback()}
+}
+function drawFallback(){
+  try{
+    const cs=getComputedStyle(document.documentElement),accent=cs.getPropertyValue('--accent').trim()||'#a9c9bb',ink=cs.getPropertyValue('--ink').trim()||'#4c332b',paper=cs.getPropertyValue('--paper').trim()||'#faf8f2';
+    x.fillStyle=paper;x.fillRect(0,0,1240,1754);x.fillStyle=accent;x.fillRect(0,0,1240,205);x.fillStyle=ink;x.font='700 48px sans-serif';x.fillText(($('headline').value||''),55,62);x.font='700 34px sans-serif';x.fillText(($('introducer').value||''),55,158);
+    const lines=[['書籍名',$('title').value||'書籍名'],['著者名',$('author').value||'著者名'],['出版社',$('pub').value||'出版社名'],['出版年',$('year').value||'出版年'],['キーワード／ジャンルなど',$('keywords').value||'']];
+    let yy=280;x.font='700 30px sans-serif';for(const [lab,val] of lines){x.fillText(lab,750,yy);x.font='500 28px sans-serif';x.fillText(String(val).slice(0,24),750,yy+42);yy+=110;x.font='700 30px sans-serif'}
+    x.font='500 30px sans-serif';const bl=$('blurb').value||'';wrap(bl,1130,x.font).slice(0,22).forEach((l,i)=>x.fillText(l,55,1080+i*40));
+  }catch(e){console.error('fallback draw failed',e)}
 }
 $('saveDraft').onclick=async()=>{clearTimeout(draftTimer);await saveDraftNow();draw();alert('この端末に下書きを保存しました。')};
 $('clearDraft').onclick=async()=>{if(!confirm('保存してある下書きを消去しますか？'))return;clearTimeout(draftTimer);try{localStorage.removeItem(DRAFT_KEY);LEGACY_DRAFT_KEYS.forEach(k=>localStorage.removeItem(k))}catch(e){}try{await idbDelete()}catch(e){}['headline','introducer','title','author','pub','year','keywords','blurb'].forEach(id=>$(id).value='');$('status').value='紹介のみ';$('condition').value='非常に良い';$('conditionWrap').hidden=true;img1=null;img2=null;$('photo1').value='';$('photo2').value='';$('customColor').value='#a9c9bb';document.querySelectorAll('.swatch').forEach((b,i)=>b.classList.toggle('active',i===0));setTheme(palettes[0]);updateBlurbCount();draw()};
@@ -275,6 +287,13 @@ $('save').onclick=()=>{
 };
 $('share').onclick=()=>c.toBlob(async b=>{let f=new File([b],'book_introduction.jpg',{type:'image/jpeg'});if(navigator.share&&navigator.canShare?.({files:[f]})){try{await navigator.share({title:'本の紹介カード',files:[f]})}catch(e){}}else alert('この端末では直接共有できません。「画像として保存」を使ってください。')},'image/jpeg');
 setTheme(palettes[0]);
+// Mobile browsers may discard a canvas bitmap while a page is suspended/backgrounded.
+// Always redraw when the page becomes visible again, and rebuild the 2D context if needed.
+c.addEventListener('contextlost',e=>{e.preventDefault()});
+c.addEventListener('contextrestored',()=>{x=c.getContext('2d');setTimeout(()=>restoreDraft(),50)});
+window.addEventListener('pageshow',()=>setTimeout(()=>restoreDraft(),80));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>{try{draw()}catch(e){restoreDraft()}},80)});
+window.addEventListener('focus',()=>setTimeout(()=>{try{draw()}catch(e){restoreDraft()}},80));
 restoreDraft();
 </script>
 </body>
